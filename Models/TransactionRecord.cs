@@ -9,8 +9,9 @@ namespace BankingVault.Models
         public Guid RecordID { get; set; }
 
         public Guid AccountContextID { get; set; }
-        public required AccountType Account;
+        public AccountType? AccountContext;
 
-        public required ICollection<Transaction> Transactions { get; set; }
+        public Guid OwnerID { get; set; }
+        public ICollection<Transaction>? Transactions { get; set; }
     }
 }

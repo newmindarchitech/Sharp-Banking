@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 
 namespace BankingVault.Models
 {
@@ -20,9 +21,10 @@ namespace BankingVault.Models
 
         public required string PasswordSalt { get; set; }
 
-        [Required]
         public DateTime CreatedDate { get; set; }
 
+        [Precision(18,2)]
+        public decimal? TotalBalance { get; set; }
         public DateTime? UpdatedDate { get; set; }
 
     }

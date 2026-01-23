@@ -1,0 +1,52 @@
+﻿@model IEnumerable<BankingVault.Models.AccountType>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>Index</h1>
+
+<p>
+    <a class="btn btn-primary btn-sm" asp-action="CreateAccount" asp-route-id="@User.FindFirst("ID")?.Value">Create Bank Account</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.AccountID)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Context)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Balance)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CreatedDate)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.AccountID)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Context)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Balance)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.CreatedDate)
+            </td>
+                <td style=" white-space:nowrap">
+                    <a class="btn btn-danger btn-sm" asp-action="Delete" asp-controller="BankAccount" asp-route-id="@item.AccountTransactionRecordID">Delete</a>
+                    <a class="btn btn-outline-primary btn-sm" asp-action="Index" asp-controller="Transaction" asp-route-id="@item.AccountTransactionRecordID">Make Transactions</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>

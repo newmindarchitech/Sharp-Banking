@@ -9,11 +9,11 @@ namespace BankingVault.Models
         {
             
         }
-        public DbSet<UserAccount> Account { get; set; }
+        public DbSet<UserAccount> UserAccounts { get; set; }
         public DbSet<AccountType> AccountTypes { get; set; }
         public DbSet<Transaction> Transactions { get; set; }
 
-        public DbSet<TransactionRecord> TransactionsRecord { get; set; }
+        public DbSet<TransactionRecord> TransactionsRecords { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<TransactionRecord>(entity =>
@@ -27,7 +27,7 @@ namespace BankingVault.Models
             modelBuilder.Entity<AccountType>(entity =>
             {
                 entity.HasOne(Re=>Re.Record)
-                .WithOne(U=>U.Account)
+                .WithOne(U=>U.AccountContext)
                 .HasForeignKey<TransactionRecord>(U=> U.AccountContextID)
                 .IsRequired();
             });

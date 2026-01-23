@@ -26,7 +26,20 @@
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
                         </li>
+                        @if (Context.User.Identity?.Name != null)
+                        {
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle text-dark" href="#" id="BankDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    BankPortal
+                                </a>
+                                <ul class="dropdown-menu" aria-labelledby="BankDropdown">
+                                    <li><a class="dropdown-item" asp-controller="BankAccount" asp-action="Index">Your Bank Accounts</a></li>
+                                    <li><a class="dropdown-item" asp-controller="BankAccount" asp-action="UserAccountBalance" asp-route-id="@User.FindFirst("ID")?.Value">Update Your Bank Balance</a></li>
+                                </ul>
+                            </li>
+                        }
                     </ul>
+                    @await Html.PartialAsync("_LoginPartial")
                 </div>
             </div>
         </nav>

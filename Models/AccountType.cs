@@ -17,21 +17,25 @@ namespace BankingVault.Models
 
         public int? WithDrawalLimits { get; set; }
 
-        public int? PenaltyFees { get; set; }
-
-        public int? DepositFee { get; set; }
+        [Precision(5,2)]
+        public decimal? PenaltyFees { get; set; }
+        [Precision(16,2)]
+        public decimal? DepositFee { get; set; }
         [Precision(16,2)]
         public decimal Balance { get; set; }
 
         public DateTime CreatedDate {  get; set; }
+
+        public DateTime DeductionDate { get; set; }
         public Guid AccountTransactionRecordID { get; set; }
-        public required TransactionRecord Record;
+        public TransactionRecord? Record;
 
     }
     public enum AccountContext
     {
-        Deposit,
+        Checking,
+        Saving,
         MoneyMarket,
-        CD
+        CertificateOfDeposit
     }
 }

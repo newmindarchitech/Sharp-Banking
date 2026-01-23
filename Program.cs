@@ -18,8 +18,10 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
 {
     options.LoginPath = "/User/Login";
     options.AccessDeniedPath = "/User/Forbidden";
-    options.ExpireTimeSpan = TimeSpan.FromDays(14);
+    options.ExpireTimeSpan = TimeSpan.FromMinutes(90);
     options.SlidingExpiration = true;
+    options.Cookie.MaxAge=TimeSpan.FromDays(30);
+    options.Cookie.SameSite=SameSiteMode.Strict;
     options.Validate();
 });
 
@@ -27,7 +29,8 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
 
 builder.Services.AddAuthorization(options =>
 {
-    options.AddPolicy("UserAuth", policy => policy.RequireRole("User"));
+    options.AddPolicy("UserAuth", policy => policy.RequireRole("User").RequireAuthenticatedUser());
+    options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin").RequireAuthenticatedUser());
 });
 var app = builder.Build();
 
@@ -42,7 +45,8 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseRouting();
 
-
+app.UseCookiePolicy();
+app.UseRequestLocalization();
 app.UseAuthentication();
 app.UseAuthorization();
 
@@ -53,5 +57,5 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}")
     .WithStaticAssets();
 
-
+app.UseResponseCaching();
 app.Run();
