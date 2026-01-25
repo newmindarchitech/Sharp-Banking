@@ -100,7 +100,7 @@ namespace BankingVault.Controllers
                     {
                         ModelState.AddModelError("", "Password was incorrect");
                     }
-                    else if (user.EmailAddress.Equals("phamtruongiang726@gmail.com"))
+                    else if (user.EmailAddress.Equals(PersonalInfo.AdminEmail))
                     {
                         var claims = new List<Claim> {
                         new Claim(ClaimTypes.Name,user.EmailAddress),

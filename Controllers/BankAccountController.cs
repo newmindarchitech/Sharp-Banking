@@ -169,7 +169,7 @@ namespace BankingVault.Controllers
                     {
                         insertWithDrawalLimits = 6;
                         insertInterestRate = 5.4m;
-                        DepositeFee = 2500000;
+                        DepositeFee = 25000000;
                         if (model.DepositAmount > DepositeFee)
                         {
                             var new_account_type_3 = new AccountType
@@ -194,7 +194,7 @@ namespace BankingVault.Controllers
                         else
                         {
                             ModelState.Clear();
-                            ModelState.AddModelError("", "Desposit Amount Below Requirement:2500000");
+                            ModelState.AddModelError("", "Desposit Amount Below Requirement:25000000");
                             var fill_Form_OwnerID = new BankAccountCreationForm
                             {
                                 TotalBalance = user_Balance.TotalBalance,

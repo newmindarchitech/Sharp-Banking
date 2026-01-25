@@ -11,7 +11,7 @@ namespace BankingVault.Models
         public Guid RecordID { get; set; }
 
         [JsonIgnore]
-        public required TransactionRecord Record { get; set; }
+        public TransactionRecord? Record { get; set; }
 
         [Precision(16,2)]
         public decimal TransactionAmount {  get; set; }
@@ -26,7 +26,5 @@ namespace BankingVault.Models
         Deposit,
         Withdrawal,
         Transfer,
-        Payment,
-
     }
 }

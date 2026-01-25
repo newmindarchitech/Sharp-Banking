@@ -4,3 +4,4 @@ obj/
 *.json
 Migrations/
 bin/
+PersonalInfo.cs

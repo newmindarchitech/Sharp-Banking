@@ -1,0 +1,45 @@
+﻿@model BankingVault.Models.TransactionForm
+
+@{
+    ViewData["Title"] = "PrepareRecord";
+}
+
+<h1>PrepareRecord</h1>
+
+<h4>TransactionForm</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="PrepareRecord">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-group">
+                <label asp-for="RecordID" class="control-label"></label>
+                <input asp-for="RecordID" class="form-control" disabled/>
+                <span asp-validation-for="RecordID" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="TransactionAmount" class="control-label"></label>
+                <input asp-for="TransactionAmount" class="form-control" />
+                <span asp-validation-for="TransactionAmount" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="TransactionContext" class="control-label"></label>
+                <select asp-for="TransactionContext" class="form-control" asp-items="Html.GetEnumSelectList<TransactionType>()">
+                    <option selected="selected" value="">Please select this transaction context</option>
+                </select>
+                <span asp-validation-for="TransactionContext" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Record Transaction" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
