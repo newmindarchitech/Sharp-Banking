@@ -8,7 +8,7 @@ namespace BankingVault.Models
         [Key]
         public Guid AccountID { get; set; }
         [Required]
-        public Guid OwnerID { get; set; }
+        public required string OwnerEmail { get; set; }
 
         public AccountContext Context {  get; set; }
 

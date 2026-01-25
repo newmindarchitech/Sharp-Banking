@@ -27,5 +27,8 @@ namespace BankingVault.Models
         public decimal? TotalBalance { get; set; }
         public DateTime? UpdatedDate { get; set; }
 
+        public Guid RecordID { get; set; }
+        public BankRecord? BankRecord { get; set; }
+
     }
 }

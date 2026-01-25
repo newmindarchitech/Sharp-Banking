@@ -44,16 +44,22 @@ namespace BankingVault.Controllers
                 if (ModelState.IsValid)
                 {
                     var salt = CreateSalt();
-
+                    var Bank_Rec = new BankRecord
+                    {
+                        Id=Guid.NewGuid(),
+                        UserAccountID=Guid.NewGuid(),
+                    };
+                    db.BankRecords.Add(Bank_Rec);
                     var newAcc = new UserAccount
                     {
-                        Id = Guid.NewGuid(),
+                        Id = Bank_Rec.UserAccountID,
                         EmailAddress = model.EmailAddress,
                         UserName = model.UserName,
                         PasswordHash = HashPassword(model.Password, salt),
                         PasswordSalt = Convert.ToHexString(salt),
                         CreatedDate = DateTime.Now,
                         UpdatedDate = DateTime.Now,
+                        RecordID=Bank_Rec.Id,
                     };
 
 

@@ -18,7 +18,7 @@ namespace BankingVault.Controllers
         public IActionResult Index()
         {
             var current_user=_db.UserAccounts.FirstOrDefaultAsync(account=>account.EmailAddress==User.Identity.Name);
-            var list_owner_Accounts=_db.AccountTypes.AsNoTracking().Where(account=>account.OwnerID==current_user.Result.Id).ToList();
+            var list_owner_Accounts=_db.AccountTypes.AsNoTracking().Where(account=>account.OwnerEmail==current_user.Result.EmailAddress).ToList();
             return View(list_owner_Accounts);
         }
         public IActionResult UserAccountBalance(string id)
@@ -83,15 +83,15 @@ namespace BankingVault.Controllers
             var user_Balance= await _db.UserAccounts.FindAsync(Guid.Parse(id));
             var new_Account_Record = new TransactionRecord
             {
-                RecordID = Guid.NewGuid(),
+                AccountRecordID = Guid.NewGuid(),
                 AccountContextID = Guid.NewGuid(),
-                OwnerID=Guid.Parse(id)
+                OwnerRecordID=user_Balance.RecordID
             };
             _db.TransactionsRecords.Add(new_Account_Record);
             switch (model.AccountContext)
             {
                 case AccountContext.Checking:
-                    if (user_Balance.TotalBalance > 0)
+                    if (user_Balance.TotalBalance > model.DepositAmount)
                     {
                         insertWithDrawalLimits = 0;
                         insertInterestRate = 0;
@@ -100,7 +100,7 @@ namespace BankingVault.Controllers
                         var new_account_type = new AccountType
                         {
                             AccountID = new_Account_Record.AccountContextID,
-                            OwnerID = Guid.Parse(id),
+                            OwnerEmail = user_Balance.EmailAddress,
                             Balance = model.DepositAmount,
                             CreatedDate = DateTime.Now,
                             DeductionDate = DeductionDate,
@@ -109,7 +109,7 @@ namespace BankingVault.Controllers
                             InterestRate = insertInterestRate,
                             DepositFee = DepositeFee,
                             PenaltyFees = PenaltyFees,
-                            AccountTransactionRecordID = new_Account_Record.RecordID,
+                            AccountTransactionRecordID = new_Account_Record.AccountRecordID,
                         };
                         user_Balance.TotalBalance -= model.DepositAmount;
                         _db.AccountTypes.Add(new_account_type);
@@ -122,7 +122,7 @@ namespace BankingVault.Controllers
                         return RedirectToAction("UserAccountBalance", "BankAccount", new {id=id});
                     }
                 case AccountContext.Saving:
-                    if (user_Balance.TotalBalance > 0)
+                    if (user_Balance.TotalBalance > model.DepositAmount)
                     {
                         insertWithDrawalLimits = 6;
                         insertInterestRate = 2.0m;
@@ -132,7 +132,7 @@ namespace BankingVault.Controllers
                             var new_account_type_2 = new AccountType
                             {
                                 AccountID = new_Account_Record.AccountContextID,
-                                OwnerID = Guid.Parse(id),
+                                OwnerEmail = user_Balance.EmailAddress,
                                 Balance = model.DepositAmount,
                                 CreatedDate = DateTime.Now,
                                 DeductionDate = DeductionDate,
@@ -140,7 +140,7 @@ namespace BankingVault.Controllers
                                 WithDrawalLimits = insertWithDrawalLimits,
                                 InterestRate = insertInterestRate,
                                 DepositFee = DepositeFee,
-                                AccountTransactionRecordID = new_Account_Record.RecordID,
+                                AccountTransactionRecordID = new_Account_Record.AccountRecordID,
                             };
                             user_Balance.TotalBalance -= model.DepositAmount;
                             _db.AccountTypes.Add(new_account_type_2);
@@ -165,7 +165,7 @@ namespace BankingVault.Controllers
                         return RedirectToAction("UserAccountBalance", "BankAccount", new { id = id });
                     }
                 case AccountContext.MoneyMarket:
-                    if (user_Balance.TotalBalance > 0)
+                    if (user_Balance.TotalBalance > model.DepositAmount)
                     {
                         insertWithDrawalLimits = 6;
                         insertInterestRate = 5.4m;
@@ -175,7 +175,7 @@ namespace BankingVault.Controllers
                             var new_account_type_3 = new AccountType
                             {
                                 AccountID = new_Account_Record.AccountContextID,
-                                OwnerID = Guid.Parse(id),
+                                OwnerEmail = user_Balance.EmailAddress,
                                 Balance = model.DepositAmount,
                                 CreatedDate = DateTime.Now,
                                 DeductionDate = DeductionDate,
@@ -183,7 +183,7 @@ namespace BankingVault.Controllers
                                 WithDrawalLimits = insertWithDrawalLimits,
                                 InterestRate = insertInterestRate,
                                 DepositFee = DepositeFee,
-                                AccountTransactionRecordID = new_Account_Record.RecordID,
+                                AccountTransactionRecordID = new_Account_Record.AccountRecordID,
                             };
                             user_Balance.TotalBalance -= model.DepositAmount;
                             _db.AccountTypes.Add(new_account_type_3);
@@ -218,7 +218,7 @@ namespace BankingVault.Controllers
         [HttpPost]
         public IActionResult Delete(Guid id)
         {
-            var RecordToDelete=_db.TransactionsRecords.FirstOrDefault(Rec=>Rec.RecordID==id);
+            var RecordToDelete=_db.TransactionsRecords.FirstOrDefault(Rec=>Rec.AccountRecordID==id);
             var accountToDelete = _db.AccountTypes.FirstOrDefault(acc => acc.AccountTransactionRecordID == RecordToDelete.AccountContextID);
             try
             {
