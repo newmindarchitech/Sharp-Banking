@@ -5,7 +5,7 @@ namespace BankingVault.Models
 {
     public class BankAccountCreationForm
     {
-        [DisplayName("OwnerID")]
+        [DisplayName("RecordID")]
         [ReadOnly(true)]
         public Guid OwnerID { get; set; }
 

@@ -43,9 +43,10 @@
                 @Html.DisplayFor(modelItem => item.CreatedDate)
             </td>
                 <td style=" white-space:nowrap">
+                    <a class="btn btn-primary btn-sm" asp-action="UpdateAccountBalance" asp-controller="BankAccount" asp-route-id="@item.AccountTransactionRecordID">Update Balance</a>
                     <a class="btn btn-danger btn-sm" asp-action="Delete" asp-controller="BankAccount" asp-route-id="@item.AccountTransactionRecordID">Delete</a>
                     <a class="btn btn-outline-primary btn-sm" asp-action="Index" asp-controller="Transaction" asp-route-id="@item.AccountTransactionRecordID">Make Transactions</a>
-            </td>
+                </td>
         </tr>
 }
     </tbody>

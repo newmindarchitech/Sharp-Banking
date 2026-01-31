@@ -215,11 +215,32 @@ namespace BankingVault.Controllers
             }
             return View();
         }
+        public IActionResult UpdateAccountBalance(Guid id)
+        {
+            var accountID=_db.AccountTypes.FirstOrDefault(acc=>acc.AccountTransactionRecordID == id);
+            var user_id = _db.UserAccounts.FirstOrDefault(id => id.EmailAddress == accountID.OwnerEmail);
+            var fill_form = new BankAccountCreationForm
+            {
+                OwnerID=accountID.AccountTransactionRecordID,
+                TotalBalance = user_id.TotalBalance,
+            };
+            return View(fill_form);
+        }
+
         [HttpPost]
+        public async Task<IActionResult>UpdateAccountBalance(Guid id,BankAccountCreationForm model)
+        {
+            var accountID = _db.AccountTypes.FirstOrDefaultAsync(acc => acc.AccountTransactionRecordID == id);
+            accountID.Result.Balance+= model.DepositAmount;
+            var deduction_target = _db.UserAccounts.FirstOrDefaultAsync(acc => acc.EmailAddress == accountID.Result.OwnerEmail);
+            deduction_target.Result.TotalBalance-= model.DepositAmount;
+            await _db.SaveChangesAsync();
+            return RedirectToAction("Index", "BankAccount");
+        }
         public IActionResult Delete(Guid id)
         {
-            var RecordToDelete=_db.TransactionsRecords.FirstOrDefault(Rec=>Rec.AccountRecordID==id);
-            var accountToDelete = _db.AccountTypes.FirstOrDefault(acc => acc.AccountTransactionRecordID == RecordToDelete.AccountContextID);
+            var RecordToDelete=_db.TransactionsRecords.Find(id);
+            var accountToDelete = _db.AccountTypes.Find(RecordToDelete.AccountContextID);
             try
             {
                 _db.TransactionsRecords.Remove(RecordToDelete);
@@ -228,7 +249,7 @@ namespace BankingVault.Controllers
                 return RedirectToAction("Index", "BankAccount");
             }catch(DbException e)
             {
-                e.ToString();
+                Console.WriteLine(e.ToString());
             }
             return View();
         }

@@ -18,12 +18,6 @@
                 @Html.DisplayNameFor(model => model.EmailAddress)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.PasswordHash)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.PasswordSalt)
-            </th>
-            <th>
                 @Html.DisplayNameFor(model => model.CreatedDate)
             </th>
             <th>
@@ -48,12 +42,6 @@
                 @Html.DisplayFor(modelItem => item.EmailAddress)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.PasswordHash)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.PasswordSalt)
-            </td>
-            <td>
                 @Html.DisplayFor(modelItem => item.CreatedDate)
             </td>
             <td>
@@ -61,11 +49,6 @@
             </td>
             <td>
                 @Html.DisplayFor(modelItem => item.UpdatedDate)
-            </td>
-            <td>
-                @Html.ActionLink("Edit", "Edit", new { /* id=item.PrimaryKey */ }) |
-                @Html.ActionLink("Details", "Details", new { /* id=item.PrimaryKey */ }) |
-                @Html.ActionLink("Delete", "Delete", new { /* id=item.PrimaryKey */ })
             </td>
         </tr>
 }

@@ -11,6 +11,8 @@ namespace BankingVault.Models
         [Required(ErrorMessage ="Transaction Amount cannot be empty")]
         public decimal TransactionAmount { get; set; }
 
+        public Guid? RecepientAccountID { get; set; }
+
         [Required(ErrorMessage ="Transaction Context Needs to be clarified")]
         public TransactionType TransactionContext {  get; set; }
     }

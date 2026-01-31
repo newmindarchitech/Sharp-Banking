@@ -45,22 +45,54 @@ namespace BankingVault.Controllers
                         {
                             try
                             {
-                                var record = new Transaction
+                                if (model.RecepientAccountID !=null)
                                 {
-                                    TransactionID = Guid.NewGuid(),
-                                    TransactionAmount = model.TransactionAmount,
-                                    RecordID = recordToWrite.Result.AccountTransactionRecordID,
-                                    TransactionContext = TransactionType.Transfer,
-                                    CreatedDate = DateTime.Now
-                                };
-                                recordToWrite.Result.Balance-=record.TransactionAmount;
-                                _db.Transactions.Add(record);
-                                await _db.SaveChangesAsync();
-                                ModelState.Clear();
-                                return RedirectToAction("Index", "Transaction", new {id=Guid.Parse(accountContextID.ToString())});
+                                    var transferTarget = _db.UserAccounts.FirstOrDefaultAsync(target => target.Id == model.RecepientAccountID);
+                                    if (transferTarget.Result==null)
+                                    {
+                                        ModelState.Clear();
+                                        ModelState.AddModelError("", "This recepient doesn't exist");
+                                        TempData["Index"] = recordToWrite.Result.AccountTransactionRecordID;
+                                        var refreshform = new TransactionForm
+                                        {
+                                            RecordID = recordToWrite.Result.AccountTransactionRecordID,
+                                        };
+                                        return View(refreshform);
+                                    }
+                                    else if(recordToWrite.Result.Context==AccountContext.Saving || recordToWrite.Result.Context == AccountContext.MoneyMarket || recordToWrite.Result.Context==AccountContext.CertificateOfDeposit)
+                                    {
+                                        
+                                        var record = new Transaction
+                                        {
+                                            TransactionID = Guid.NewGuid(),
+                                            TransactionAmount = model.TransactionAmount,
+                                            RecordID = recordToWrite.Result.AccountTransactionRecordID,
+                                            TransactionContext = TransactionType.Transfer,
+                                            CreatedDate = DateTime.Now
+                                        };
+                                        recordToWrite.Result.Balance -= record.TransactionAmount;
+                                        recordToWrite.Result.WithDrawalLimits--;
+                                        transferTarget.Result.TotalBalance += model.TransactionAmount;
+                                        _db.Transactions.Add(record);
+                                        await _db.SaveChangesAsync();
+                                        ModelState.Clear();
+                                        return RedirectToAction("Index","Transaction", new { id = Guid.Parse(accountContextID.ToString()) });
+                                    }
+                                }
+                                else
+                                {
+                                    ModelState.Clear();
+                                    ModelState.AddModelError("", "An existing accountID is required to finish this type of transaction");
+                                    TempData["Index"] = recordToWrite.Result.AccountTransactionRecordID;
+                                    var refreshform = new TransactionForm
+                                    {
+                                        RecordID = recordToWrite.Result.AccountTransactionRecordID,
+                                    };
+                                    return View(refreshform);
+                                }
                             }catch(DbException e)
                             {
-                                e.ToString();
+                                Console.WriteLine(e.ToString());
                             }
                         }
                         else
@@ -69,9 +101,9 @@ namespace BankingVault.Controllers
                             ModelState.AddModelError("", "Current account Balance is not enough for this transaction");
                             var fill_form = new TransactionForm
                             {
-                                RecordID=recordToWrite.Result.AccountTransactionRecordID,
+                                RecordID = recordToWrite.Result.AccountTransactionRecordID,
                             };
-                            return View(fill_form);
+                            return RedirectToAction("UpdateAccountBalance", "BankAccount", new { id = Guid.Parse(accountContextID.ToString()) });
                         }
                         break;
                     case TransactionType.Deposit:
@@ -87,7 +119,7 @@ namespace BankingVault.Controllers
                                     TransactionContext = TransactionType.Deposit,
                                     CreatedDate = DateTime.Now
                                 };
-                                recordToWrite.Result.Balance -= record.TransactionAmount;
+                                recordToWrite.Result.Balance += record.TransactionAmount;
                                 _db.Transactions.Add(record);
                                 await _db.SaveChangesAsync();
                                 ModelState.Clear();
@@ -95,22 +127,16 @@ namespace BankingVault.Controllers
                             }
                             catch (DbException e)
                             {
-                                e.ToString();
+                                Console.WriteLine(e.ToString());
                             }
                         }
                         else
                         {
-                            ModelState.Clear();
-                            ModelState.AddModelError("", "Current account Balance is not enough for this transaction");
-                            var fill_form = new TransactionForm
-                            {
-                                RecordID = recordToWrite.Result.AccountTransactionRecordID,
-                            };
-                            return View(fill_form);
+                            return RedirectToAction("UpdateAccountBalance", "BankAccount", new { id = Guid.Parse(accountContextID.ToString()) });
                         }
                         break;
                     case TransactionType.Withdrawal:
-                        if (recordToWrite.Result.Balance > model.TransactionAmount)
+                        if (recordToWrite.Result.Balance > model.TransactionAmount && recordToWrite.Result.Context==AccountContext.Checking)
                         {
                             try
                             {
@@ -133,20 +159,44 @@ namespace BankingVault.Controllers
                                 e.ToString();
                             }
                         }
+                        else if (recordToWrite.Result.Balance > model.TransactionAmount && recordToWrite.Result.Context != AccountContext.Checking)
+                        {
+                            try
+                            {
+                                var record = new Transaction
+                                {
+                                    TransactionID = Guid.NewGuid(),
+                                    TransactionAmount = model.TransactionAmount,
+                                    RecordID = recordToWrite.Result.AccountTransactionRecordID,
+                                    TransactionContext = TransactionType.Withdrawal,
+                                    CreatedDate = DateTime.Now
+                                };
+                                recordToWrite.Result.Balance -= record.TransactionAmount;
+                                recordToWrite.Result.WithDrawalLimits--;
+                                _db.Transactions.Add(record);
+                                await _db.SaveChangesAsync();
+                                ModelState.Clear();
+                                return RedirectToAction("Index", "Transaction", new { id = Guid.Parse(accountContextID.ToString()) });
+                            }
+                            catch (DbException e)
+                            {
+                                e.ToString();
+                            }
+                        }
                         else
                         {
-                            ModelState.Clear();
-                            ModelState.AddModelError("", "Current account Balance is not enough for this transaction");
-                            var fill_form = new TransactionForm
-                            {
-                                RecordID = recordToWrite.Result.AccountTransactionRecordID,
-                            };
-                            return View(fill_form);
+                            return RedirectToAction("UpdateAccountBalance", "BankAccount", new { id = Guid.Parse(accountContextID.ToString()) });
                         }
                         break;
                 }
             }
             return View();
+        }
+
+        public IActionResult Redirect()
+        {
+            var transaction_redirect =TempData["Index"];
+            return RedirectToAction("Index", "Transaction", new {id=transaction_redirect});
         }
     }
 }

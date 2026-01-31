@@ -23,6 +23,11 @@
                 <span asp-validation-for="TransactionAmount" class="text-danger"></span>
             </div>
             <div class="form-group">
+                <label asp-for="RecepientAccountID" class="control-label"></label>
+                <input asp-for="RecepientAccountID" class="form-control" />
+                <span asp-validation-for="RecepientAccountID" class="text-danger"></span>
+            </div>
+            <div class="form-group">
                 <label asp-for="TransactionContext" class="control-label"></label>
                 <select asp-for="TransactionContext" class="form-control" asp-items="Html.GetEnumSelectList<TransactionType>()">
                     <option selected="selected" value="">Please select this transaction context</option>
@@ -37,7 +42,7 @@
 </div>
 
 <div>
-    <a asp-action="Index">Back to List</a>
+    <a asp-action="Redirect">Back to List</a>
 </div>
 
 @section Scripts {

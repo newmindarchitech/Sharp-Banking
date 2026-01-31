@@ -1,0 +1,44 @@
+﻿@model BankingVault.Models.BankAccountCreationForm
+@{
+    ViewData["Title"] = "UpdateAccountBalance";
+}
+
+<h1>UpdateAccountBalance</h1>
+
+<h4>AccountBalanceUpdateForm</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="UpdateAccountBalance">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-group">
+                <label asp-for="OwnerID" class="control-label"></label>
+                <input asp-for="OwnerID" class="form-control" disabled />
+                <span asp-validation-for="OwnerID" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="TotalBalance" class="control-label"></label>
+                <input asp-for="TotalBalance" class="form-control" disabled/>
+                <span asp-validation-for="TotalBalance" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="DepositAmount" class="control-label"></label>
+                <input asp-for="DepositAmount" class="form-control" />
+                <span asp-validation-for="DepositAmount" class="text-danger"></span>
+            </div>
+            <div class="mx-auto mt-3">
+                <div class="form-group">
+                    <input type="submit" value="UpdateBalance" class="btn btn-primary" />
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
