@@ -1,0 +1,459 @@
+﻿/* ========================================
+   BANKING VAULT - ENHANCED STYLES
+   Works alongside Bootstrap - does not override existing classes
+   ======================================== */
+
+/* Import Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Work+Sans:wght@400;500;600;700&display=swap');
+
+/* CSS Variables for Banking Theme */
+:root {
+    --banking-primary: #0A4D3C;
+    --banking-primary-light: #0E6B4F;
+    --banking-accent: #D4AF37;
+    --banking-accent-light: #F5E6C8;
+    --banking-success: #10B981;
+    --banking-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* Enhanced Body Typography */
+body {
+    font-family: 'Work Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+}
+
+/* Enhanced Headings with Playfair Display */
+h1, h2, h3, h4, h5, h6,
+.page-title,
+.auth-title,
+.card-title {
+    font-family: 'Playfair Display', serif !important;
+}
+
+/* Page Header Styling */
+.page-header {
+    margin-bottom: 3rem;
+    animation: fadeInUp 0.6s ease;
+}
+
+.page-title {
+    font-size: 2.5rem;
+    font-weight: 900;
+    color: var(--banking-primary);
+    margin-bottom: 0.5rem;
+}
+
+.page-subtitle {
+    font-size: 1.1rem;
+    color: #6B7280;
+}
+
+/* Stats Grid for Dashboard */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+}
+
+.stat-card {
+    background: linear-gradient(135deg, var(--banking-primary) 0%, var(--banking-primary-light) 100%);
+    color: white;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: var(--banking-shadow);
+    transition: transform 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+    .stat-card::after {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    }
+
+    .stat-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+    }
+
+    .stat-card.success {
+        background: linear-gradient(135deg, #059669 0%, #10B981 100%);
+    }
+
+    .stat-card.warning {
+        background: linear-gradient(135deg, #D97706 0%, #F59E0B 100%);
+    }
+
+    .stat-card.accent {
+        background: linear-gradient(135deg, #C5A028 0%, var(--banking-accent) 100%);
+    }
+
+.stat-label {
+    font-size: 0.9rem;
+    opacity: 0.9;
+    margin-bottom: 0.5rem;
+}
+
+.stat-value {
+    font-size: 2.5rem;
+    font-weight: 700;
+    font-family: 'Playfair Display', serif;
+}
+
+/* Card Grid Layout */
+.card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.5rem;
+    margin-top: 2rem;
+}
+
+/* Enhanced Account Cards */
+.account-card {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+    .account-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, var(--banking-primary) 0%, var(--banking-accent) 100%);
+    }
+
+    .account-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    }
+
+.account-type {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.account-number {
+    font-size: 0.85rem;
+    color: #6B7280;
+    font-family: 'Courier New', monospace;
+    margin-bottom: 1rem;
+}
+
+.account-balance {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--banking-primary);
+    margin: 1rem 0;
+    font-family: 'Playfair Display', serif;
+}
+
+.account-info {
+    font-size: 0.9rem;
+    color: #6B7280;
+    margin-bottom: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid #E5E7EB;
+}
+
+/* Enhanced Badges */
+.badge-success {
+    background-color: #D1FAE5 !important;
+    color: #065F46 !important;
+}
+
+.badge-info {
+    background-color: #DBEAFE !important;
+    color: #1E40AF !important;
+}
+
+.badge-warning {
+    background-color: #FEF3C7 !important;
+    color: #92400E !important;
+}
+
+/* Button Group */
+.btn-group {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+/* Enhanced Primary Buttons */
+.btn-primary {
+    background: var(--banking-primary) !important;
+    border-color: var(--banking-primary) !important;
+    transition: all 0.3s ease;
+}
+
+    .btn-primary:hover {
+        background: #073529 !important;
+        border-color: #073529 !important;
+        transform: translateY(-2px);
+        box-shadow: var(--banking-shadow);
+    }
+
+/* Success Buttons */
+.btn-success {
+    background: var(--banking-success) !important;
+    border-color: var(--banking-success) !important;
+}
+
+    .btn-success:hover {
+        background: #059669 !important;
+        border-color: #059669 !important;
+    }
+
+/* Accent Buttons */
+.btn-accent {
+    background: var(--banking-accent);
+    border-color: var(--banking-accent);
+    color: #1A1A1A;
+    font-weight: 600;
+}
+
+    .btn-accent:hover {
+        background: #C5A028;
+        border-color: #C5A028;
+        color: #1A1A1A;
+    }
+
+/* Enhanced Table Styling */
+.table-container {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: var(--banking-shadow);
+}
+
+.table thead {
+    background: #F9FAFB;
+}
+
+    .table thead th {
+        font-weight: 600;
+        color: #374151;
+        text-transform: uppercase;
+        font-size: 0.875rem;
+        letter-spacing: 0.5px;
+        border-bottom: 2px solid #E5E7EB;
+    }
+
+.table tbody tr {
+    transition: background-color 0.2s ease;
+}
+
+    .table tbody tr:hover {
+        background: #F9FAFB;
+    }
+
+/* Info Box */
+.info-box {
+    background: var(--banking-accent-light);
+    border: 2px solid var(--banking-accent);
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+    .info-box strong {
+        display: block;
+        color: var(--banking-primary);
+        font-size: 1.1rem;
+        margin-bottom: 0.5rem;
+    }
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 3rem 2rem;
+}
+
+.empty-state-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+.empty-state-title {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+    color: #1A1A1A;
+}
+
+.empty-state-text {
+    color: #6B7280;
+    margin-bottom: 2rem;
+}
+
+/* Auth Pages Enhancement */
+.auth-container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--banking-primary) 0%, var(--banking-primary-light) 100%);
+    padding: 2rem;
+}
+
+.auth-card {
+    background: white;
+    padding: 3rem;
+    border-radius: 12px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+    max-width: 450px;
+    width: 100%;
+    animation: fadeInUp 0.6s ease;
+}
+
+.auth-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.auth-title {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+}
+
+.auth-subtitle {
+    color: #6B7280;
+}
+
+.auth-footer {
+    text-align: center;
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid #E5E7EB;
+}
+
+    .auth-footer a {
+        color: var(--banking-primary);
+        font-weight: 600;
+        text-decoration: none;
+    }
+
+        .auth-footer a:hover {
+            text-decoration: underline;
+        }
+
+/* Form Enhancements */
+.form-control:focus {
+    border-color: var(--banking-primary);
+    box-shadow: 0 0 0 0.2rem rgba(10, 77, 60, 0.25);
+}
+
+/* Transaction Summary */
+.transaction-summary {
+    background: #F9FAFB;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.875rem 0;
+    border-bottom: 1px solid #E5E7EB;
+}
+
+    .summary-row:last-child {
+        border-bottom: none;
+        padding-top: 1rem;
+        font-size: 1.2rem;
+        font-weight: 600;
+    }
+
+/* Account Details Box */
+.account-details {
+    background: #F9FAFB;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+    .account-details h4 {
+        margin-bottom: 1rem;
+    }
+
+    .account-details ul {
+        list-style: none;
+        padding: 0;
+    }
+
+    .account-details li {
+        padding: 0.75rem 0;
+        border-bottom: 1px solid #E5E7EB;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+        .account-details li:last-child {
+            border-bottom: none;
+        }
+
+        .account-details li::before {
+            content: '✓';
+            color: var(--banking-success);
+            font-weight: 700;
+        }
+
+/* Animations */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .page-title {
+        font-size: 2rem;
+    }
+
+    .stats-grid,
+    .card-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .stat-value {
+        font-size: 2rem;
+    }
+
+    .account-balance {
+        font-size: 2rem;
+    }
+}
+
+/* Loading State */
+.loading {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(255,255,255,.3);
+    border-radius: 50%;
+    border-top-color: #fff;
+    animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}

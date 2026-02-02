@@ -1,44 +1,167 @@
 ﻿@model BankingVault.Models.AccountBalanceForm
 @{
-    ViewData["Title"] = "UserAccountBalance";
+    ViewData["title"] = "useraccountbalance";
 }
 
-<h1>UserAccountBalance</h1>
+<div class="container py-5">
+    <div class="page-header">
+        <h1 class="page-title">💵 Nạp tiền vào tài khoản</h1>
+        <p class="page-subtitle">Thêm tiền vào số dư tổng của bạn</p>
 
-<h4>AccountBalanceForm</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="UserAccountBalance">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-group">
-                <label asp-for="UserID" class="control-label"></label>
-                <input asp-for="UserID" class="form-control" disabled/>
-                <span asp-validation-for="UserID" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="AccountBalance" class="control-label"></label>
-                <input asp-for="AccountBalance" class="form-control" disabled />
-                <span asp-validation-for="AccountBalance" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="DepositAmount" class="control-label"></label>
-                <input asp-for="DepositAmount" class="form-control" />
-                <span asp-validation-for="DepositAmount" class="text-danger"></span>
-            </div>
-            <div class="mx-auto mt-3">
-                <div class="form-group">
-                    <input type="submit" value="UpdateBalance" class="btn btn-primary" />
-                </div>
-            </div>
-        </form>
     </div>
 </div>
+<div class="row justify-content-center" />
+<div class="col-lg-6" />
+<div class="info-box" />
+<strong>💰 Số dư hiện tại</strong>
+<div style="font-size: 2.5rem; font-weight: 700; color: var(--banking-primary); font-family: 'Playfair Display', serif; margin-top: 0.5rem;">
+    @Model.AccountBalance?.ToString("C")
 
-<div>
-    <a asp-action="Index">Back to List</a>
 </div>
+<div class="card">
+    <div class="card-body" style="padding: 2rem;">
+        <form method="post" asp-controller="BankAccount" asp-action="UserAccountBalance" asp-route-id="@Model.UserID">
+            <input type="hidden" asp-for="UserID" />
+            <input type="hidden" asp-for="AccountBalance" />
 
+            <div class="mb-4">
+                <label class="form-label fw-semibold" style="font-size: 1.1rem;">Số tiền nạp</label>
+                <div class="input-group input-group-lg">
+                    <span class="input-group-text" style="background: #F9FAFB; border: 2px solid #E5E7EB; font-size: 1.5rem;">$</span>
+                    <input type="number" class="form-control" asp-for="DepositAmount"
+                           placeholder="0.00" step="0.01" min="0"
+                           style="border: 2px solid #E5E7EB; font-size: 1.5rem; padding: 1rem;"
+                           id="depositAmount" oninput="updateSummary()" />
+
+                </div>
+                <span class="text-danger" asp-validation-for="DepositAmount"></span>
+
+            </div>
+
+            <div class="transaction-summary">
+                <h4 style="font-family: 'Playfair Display', serif; margin-bottom: 1rem;">📊 Tóm tắt giao dịch</h4>
+                <div class="summary-row">
+                    <span>Số dư hiện tại:</span>
+                    <strong>@Model.AccountBalance?.ToString("C")</strong>
+
+                </div>
+                <div class="summary-row">
+                    <span>Số tiền nạp:</span>
+                    <strong id="summaryDeposit" style="color: var(--banking-success);">$0.00</strong>
+
+                </div>
+                <div class="summary-row">
+                    <span><strong>Số dư mới:</strong></span>
+                    <strong id="summaryNewBalance" style="color: var(--banking-primary); font-size: 1.3rem;">@Model.AccountBalance?.ToString("C")</strong>
+
+                </div>
+
+            </div>
+
+            <div class="d-flex gap-2 mt-4">
+                <button type="submit" class="btn btn-success flex-fill" style="padding: 1rem; font-size: 1.1rem; font-weight: 600;">
+                    ✓ Xác nhận nạp tiền
+
+                </button>
+                <a asp-controller="Home" asp-action="Index" class="btn btn-secondary" style="padding: 1rem;">
+                    Hủy
+
+                </a>
+
+            </div>
+
+        </form>
+
+    </div>
+    <div class="alert alert-info mt-4" style="border-left: 4px solid var(--banking-primary);">
+        <strong>💡 Lưu ý:</strong>
+        <ul class="mb-0 mt-2">
+
+            <li>Số tiền nạp phải lớn hơn $0</li>
+
+            <li>Giao dịch sẽ được xử lý ngay lập tức</li>
+
+            <li>Bạn có thể sử dụng số dư này để tạo tài khoản ngân hàng</li>
+
+        </ul>
+
+    </div>
+</div>
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script>
+        const currentBalance = @(Model.AccountBalance ?? 0);
+
+         function updateSummary() {
+             const depositAmount = parseFloat(document.getElementById('depositAmount').value) || 0;
+             const newBalance = currentBalance + depositAmount;
+
+             document.getElementById('summaryDeposit').textContent = '$' + depositAmount.toFixed(2);
+             document.getElementById('summaryNewBalance').textContent = '$' + newBalance.toFixed(2);
+         }
+         // Format input on blur
+         document.getElementById('depositAmount').addEventListener('blur', function() {
+             if (this.value) {
+                 this.value = parseFloat(this.value).toFixed(2);
+                 updateSummary();
+             }
+         });
+    </script>
 }
+
+<style>
+    .info-box {
+        background: linear-gradient(135deg, #D4AF37 0%, #F5E6C8 100%);
+        border: none;
+        border-radius: 12px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+
+        .info-box strong {
+            display: block;
+            color: #1A1A1A;
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+        }
+
+
+    .transaction-summary {
+        background: #F9FAFB;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-top: 2rem;
+    }
+
+
+    .summary-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 1rem 0;
+        border-bottom: 1px solid #E5E7EB;
+    }
+
+
+        .summary-row:last-child {
+            border-bottom: none;
+            padding-top: 1.5rem;
+            margin-top: 0.5rem;
+            border-top: 2px solid #E5E7EB;
+        }
+
+
+    .form-control:focus {
+        border-color: var(--banking-primary);
+        box-shadow: 0 0 0 3px rgba(10, 77, 60, 0.1);
+    }
+
+
+    .input-group-text {
+        font-weight: 700;
+    }
+
+</style>

@@ -1,8 +1,115 @@
 ﻿@{
     ViewData["Title"] = "Home Page";
+    var userBalance = ViewBag.TotalBalance ?? 0m;
+    var accountCount = Model?.Count() ?? 0;
+    var thisMonthChange = ViewBag.MonthlyChange ?? 0m;
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="page-header">
+    <h1 class="page-title">Chào mừng, @User.FindFirst("UserName")?.Value</h1>
+    <p class="page-subtitle">Tổng quan tài chính của bạn</p>
+
 </div>
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-label">Total Balance</div>
+        <div class="stat-value">@userBalance.ToString("C")</div>
+
+    </div>
+    <div class="stat-card success">
+        <div class="stat-label">Active Accounts</div>
+        <div class="stat-value">@accountCount</div>
+
+    </div>
+    <div class="stat-card warning">
+        <div class="stat-label">This Month</div>
+        <div class="stat-value">@thisMonthChange.ToString("C")</div>
+
+    </div>
+
+</div>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Tài khoản của bạn</h2>
+    <a asp-controller="BankAccount" asp-action="Index" class="btn btn-primary">Xem tất cả tài khoản</a>
+
+</div>
+
+<div class="card-grid">
+    @if (Model != null && Model.Any())
+    {
+        foreach (var account in Model.Take(3))
+        {
+            <div class="card account-card">
+                <div class="card-body">
+                    <div class="account-type">@account.Context.ToString() Account</div>
+                    <div class="account-number">Account #@account.AccountID.ToString().Substring(0, 8)</div>
+
+                    @if (account.Context == BankingVault.Models.AccountContext.Checking)
+                    {
+                        <span class="badge badge-success">Active</span>
+                    }
+                    else if (account.Context == BankingVault.Models.AccountContext.Saving)
+                    {
+                        <span class="badge badge-info">Savings</span>
+                    }
+                    else
+                    {
+                        <span class="badge badge-warning">Investment</span>
+                    }
+
+                    <div class="account-balance">@account.Balance.ToString("C")</div>
+
+                    @if (account.InterestRate > 0 || account.WithDrawalLimits.HasValue)
+                    {
+                        <div class="account-info">
+                            @if (account.InterestRate > 0)
+                            {
+                                <span>Interest Rate: @account.InterestRate%</span>
+                            }
+                            @if (account.WithDrawalLimits.HasValue && account.WithDrawalLimits > 0)
+                            {
+                                <span> | Withdrawal Limit: @account.WithDrawalLimits/month</span>
+                            }
+
+                        </div>
+                    }
+
+                    <div class="btn-group mt-3">
+                        <a asp-controller="Transaction" asp-action="Index" asp-route-id="@account.AccountTransactionRecordID" class="btn btn-primary btn-sm">View Details</a>
+                        <a asp-controller="BankAccount" asp-action="UserAccountBalance" asp-route-id="@User.FindFirst("ID")?.Value" class="btn btn-success btn-sm">Deposit</a>
+
+                    </div>
+
+                </div>
+
+            </div>
+        }
+    }
+
+    <div class="card" style="border: 2px dashed #dee2e6;">
+        <div class="card-body empty-state">
+            <div class="empty-state-icon">➕</div>
+            <h3 class="empty-state-title">Create New Account</h3>
+            <p class="empty-state-text">Mở thêm tài khoản để quản lý tài chính tốt hơn</p>
+            <a asp-controller="BankAccount" asp-action="CreateAccount" asp-route-id="@User.FindFirst("ID")?.Value" class="btn btn-primary">Get Started</a>
+
+        </div>
+
+    </div>
+
+</div>
+
+@if (Model == null || !Model.Any())
+{
+    <div class="card mt-4">
+        <div class="card-body empty-state">
+            <div class="empty-state-icon">🏦</div>
+            <h3 class="empty-state-title">Welcome to Banking Vault!</h3>
+            <p class="empty-state-text">Bạn chưa có tài khoản ngân hàng nào. Hãy tạo tài khoản đầu tiên để bắt đầu!</p>
+            <a asp-controller="BankAccount" asp-action="UserAccountBalance" asp-route-id="@User.FindFirst("ID")?.Value" class="btn btn-accent btn-lg">Nạp tiền vào tài khoản</a>
+
+        </div>
+
+    </div>
+}

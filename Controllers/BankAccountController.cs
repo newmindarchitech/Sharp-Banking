@@ -17,19 +17,19 @@ namespace BankingVault.Controllers
         [HttpGet]
         public IActionResult Index()
         {
-            var current_user=_db.UserAccounts.FirstOrDefaultAsync(account=>account.EmailAddress==User.Identity.Name);
+            var current_user= _db.UserAccounts.FirstOrDefaultAsync(account=>account.EmailAddress==User.Identity.Name);
             var list_owner_Accounts=_db.AccountTypes.AsNoTracking().Where(account=>account.OwnerEmail==current_user.Result.EmailAddress).ToList();
             return View(list_owner_Accounts);
         }
         public IActionResult UserAccountBalance(string id)
         {
             var user_id=Guid.Parse(id);
-            var fill = _db.UserAccounts.FindAsync(user_id);
+            var fill = _db.UserAccounts.Find(user_id);
 
             var fill_form_ID = new AccountBalanceForm
             {
-               UserID = fill.Result.Id,
-               AccountBalance=fill.Result.TotalBalance
+               UserID = fill.Id,
+               AccountBalance=fill.TotalBalance
             };
             return View(fill_form_ID);
         }
@@ -83,8 +83,8 @@ namespace BankingVault.Controllers
             var user_Balance= await _db.UserAccounts.FindAsync(Guid.Parse(id));
             var new_Account_Record = new TransactionRecord
             {
-                AccountRecordID = Guid.NewGuid(),
-                AccountContextID = Guid.NewGuid(),
+                AccountRecordID = Guid.CreateVersion7(),
+                AccountContextID = Guid.CreateVersion7(),
                 OwnerRecordID=user_Balance.RecordID
             };
             _db.TransactionsRecords.Add(new_Account_Record);
@@ -189,7 +189,7 @@ namespace BankingVault.Controllers
                             _db.AccountTypes.Add(new_account_type_3);
                             await _db.SaveChangesAsync();
                             ModelState.Clear();
-                            return RedirectToAction("Index", "BankAccount");
+                            return RedirectToAction("Index", "BankAccount", new { id = id });
                         }
                         else
                         {
@@ -207,7 +207,7 @@ namespace BankingVault.Controllers
                     }
                     else
                     {
-                        return RedirectToAction("UserAccountBalance", "BankAccount");
+                        return RedirectToAction("UserAccountBalance", "BankAccount", new { id = id });
                     }
                 case AccountContext.CertificateOfDeposit:
 
@@ -230,19 +230,21 @@ namespace BankingVault.Controllers
         [HttpPost]
         public async Task<IActionResult>UpdateAccountBalance(Guid id,BankAccountCreationForm model)
         {
-            var accountID = _db.AccountTypes.FirstOrDefaultAsync(acc => acc.AccountTransactionRecordID == id);
-            accountID.Result.Balance+= model.DepositAmount;
-            var deduction_target = _db.UserAccounts.FirstOrDefaultAsync(acc => acc.EmailAddress == accountID.Result.OwnerEmail);
-            deduction_target.Result.TotalBalance-= model.DepositAmount;
+            var accountID = await _db.AccountTypes.FirstOrDefaultAsync(acc => acc.AccountTransactionRecordID == id);
+            accountID.Balance+= model.DepositAmount;
+            var deduction_target = await _db.UserAccounts.FirstOrDefaultAsync(acc => acc.EmailAddress == accountID.OwnerEmail);
+            deduction_target.TotalBalance-= model.DepositAmount;
             await _db.SaveChangesAsync();
             return RedirectToAction("Index", "BankAccount");
         }
         public IActionResult Delete(Guid id)
         {
             var RecordToDelete=_db.TransactionsRecords.Find(id);
+            var transactionsToDeletedRecord = _db.Transactions.Where(rec => rec.RecordID == RecordToDelete.AccountRecordID);
             var accountToDelete = _db.AccountTypes.Find(RecordToDelete.AccountContextID);
             try
             {
+                _db.Transactions.RemoveRange(transactionsToDeletedRecord);
                 _db.TransactionsRecords.Remove(RecordToDelete);
                 _db.AccountTypes.Remove(accountToDelete);
                 _db.SaveChanges();

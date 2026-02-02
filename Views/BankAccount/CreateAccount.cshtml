@@ -1,51 +1,268 @@
 ﻿@model BankingVault.Models.BankAccountCreationForm
 @{
-    ViewData["Title"] = "CreateAccount";
+    ViewData["Title"] = "Creating new Account";
 }
 
-<h1>CreateAccount</h1>
+<div class="container py-5" />
+<div class="page-header">
+    <h1 class="page-title">➕ Tạo tài khoản ngân hàng mới</h1>
+    <p class="page-subtitle">Chọn loại tài khoản phù hợp với nhu cầu của bạn</p>
 
-<h4>BankAccountCreationForm</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="CreateAccount">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-group">
-                <label asp-for="OwnerID" class="control-label"></label>
-                <input asp-for="OwnerID" class="form-control" disabled/>
-                <span asp-validation-for="OwnerID" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="TotalBalance" class="control-label"></label>
-                <input asp-for="TotalBalance" class="form-control" disabled/>
-                <span asp-validation-for="TotalBalance" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="DepositAmount" class="control-label"></label>
-                <input asp-for="DepositAmount" class="form-control" />
-                <span asp-validation-for="DepositAmount" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="AccountContext" class="control-label"></label>
-                <select asp-for="AccountContext" class="form-control" asp-items="Html.GetEnumSelectList<AccountContext>()" >
-                    <option selected="selected" value="">Please select your account type</option>
+</div>
+<div class="row justify-content-center" />
+<div class="col-lg-8" />
+<div class="info-box" />
+<strong>💰 Số dư khả dụng của bạn</strong>
+<div style="font-size: 2.5rem; font-weight: 700; color: var(--banking-primary); font-family: 'Playfair Display', serif; margin-top: 0.5rem;">
+    @Model.TotalBalance?.ToString("C")
+</div>
+<p style="margin: 0; color: #6B7280; margin-top: 0.5rem;">
+    Số tiền này sẽ được sử dụng để mở tài khoản mới
+</p>
+@if (!ViewData.ModelState.IsValid)
+{
+    <div class="alert alert-danger">
+        @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+        {
+            <div>⚠ @error.ErrorMessage</div>
+        }
+    </div>
+}
+<div class="card">
+    <div class="card-body" style="padding: 2rem;">
+        <form method="post" asp-controller="BankAccount" asp-action="CreateAccount" asp-route-id="@Model.OwnerID">
+            <input type="hidden" asp-for="OwnerID" disabled />
+            <input type="hidden" asp-for="TotalBalance" disabled />
+            <div class="mb-4">
+                <label class="form-label fw-semibold" style="font-size: 1.1rem;">Chọn loại tài khoản</label>
+                <select class="form-select form-select-lg" asp-for="AccountContext" style="border: 2px solid #E5E7EB; padding: 1rem; font-size: 1.1rem;" onchange="updateAccountInfo()">
+                    <option value="0">Checking Account - Tài khoản thanh toán</option>
+                    <option value="1">Savings Account - Tài khoản tiết kiệm</option>
+                    <option value="2">Money Market - Tài khoản đầu tư</option>
+                    <option value="3">Certificate of Deposit (CD)</option>
                 </select>
-                <span asp-validation-for="AccountContext" class="text-danger"></span>
             </div>
-            <div class="mx-auto mt-3">
-                <div class="form-group">
-                    <input type="submit" value="CreateAccount" class="btn btn-primary" />
+            <div class="account-details" id="accountDetails">
+                <h4 style="font-family: 'Playfair Display', serif; margin-bottom: 1rem;">
+                    <span id="accountTitle">Checking Account</span> - Chi tiết
+                </h4>
+                <ul id="accountFeatures">
+                    <li>Không yêu cầu số dư tối thiểu</li>
+                    <li>Rút tiền không giới hạn</li>
+                    <li>Lãi suất: 0%</li>
+                    <li>Không có phí hàng tháng</li>
+                </ul>
+            </div>
+            <div class="mb-4">
+                <label class="form-label fw-semibold" style="font-size: 1.1rem;">Số tiền gửi ban đầu</label>
+                <div class="input-group input-group-lg">
+                    <span class="input-group-text" style="background: #F9FAFB; border: 2px solid #E5E7EB; font-size: 1.5rem;">$</span>
+                    <input type="number" class="form-control" asp-for="DepositAmount" placeholder="0.00" step="0.01" min="0" style="border: 2px solid #E5E7EB; font-size: 1.5rem; padding: 1rem;" id="depositInput" oninput="validateDeposit()" />
                 </div>
+                <span class="text-danger" asp-validation-for="DepositAmount"></span>
+                <small class="text-muted" id="minimumNote">
+                    Tối thiểu: $0 cho Checking
+                </small>
+            </div>
+            <div class="transaction-summary">
+                <h4 style="font-family: 'Playfair Display', serif; margin-bottom: 1rem;">📊 Tóm tắt</h4>
+                <div class="summary-row">
+                    <span>Số dư hiện tại:</span>
+                    <strong>@Model.TotalBalance?.ToString("C")</strong>
+                </div>
+                <div class="summary-row">
+                    <span>Tiền gửi vào tài khoản mới:</span>
+                    <strong id="depositSummary" style="color: var(--banking-danger);">$0.00</strong>
+                </div>
+                <div class="summary-row">
+                    <span><strong>Số dư còn lại:</strong></span>
+                    <strong id="remainingSummary" style="color: var(--banking-primary); font-size: 1.3rem;">
+                        @Model.TotalBalance?.ToString("C")
+                    </strong>
+                </div>
+            </div>
+            <div class="d-flex gap-2 mt-4">
+                <button type="submit" class="btn btn-success flex-fill" style="padding: 1rem; font-size: 1.1rem; font-weight: 600;">
+                    ✓ Tạo tài khoản
+                </button>
+                <a asp-controller="BankAccount" asp-action="Index" class="btn btn-secondary" style="padding: 1rem;">
+                    Hủy
+                </a>
             </div>
         </form>
     </div>
 </div>
-
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
-
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script>
+         const totalBalance = @(Model.TotalBalance ?? 0);
+
+         const accountTypes = {
+             0: { // Checking
+                 title: 'Checking Account',
+                 features: [
+                     'Không yêu cầu số dư tối thiểu',
+                     'Rút tiền không giới hạn',
+                     'Lãi suất: 0%',
+                     'Không có phí hàng tháng'
+                 ],
+                 minimum: 0
+             },
+             1: { // Savings
+                 title: 'Savings Account',
+                 features: [
+                     'Yêu cầu gửi tối thiểu: $250,000',
+                     'Giới hạn rút: 6 lần/tháng',
+                     'Lãi suất: 2.0% APY',
+                     'Có thể tính phí dịch vụ hàng tháng'
+                 ],
+                 minimum: 250000
+             },
+             2: { // Money Market
+                 title: 'Money Market Account',
+                 features: [
+                     'Yêu cầu gửi tối thiểu: $2,500,000',
+                     'Giới hạn rút: 6 lần/tháng',
+                     'Lãi suất: 5.4% APY',
+                     'Lợi nhuận cao hơn cho số dư lớn'
+                 ],
+                 minimum: 2500000
+             },
+             3: { // CD
+                 title: 'Certificate of Deposit',
+                 features: [
+                     'Đầu tư có kỳ hạn cố định',
+                     'Lãi suất cao hơn',
+                     'Phạt nếu rút trước hạn',
+                     'Kỳ hạn: 3, 6, 12, 24, 36 tháng'
+                 ],
+                 minimum: 1000000
+             }
+         };
+
+        function updateAccountInfo() {
+             const select = document.querySelector('select[name="AccountContext"]');
+             const accountType = accountTypes[select.value];
+
+             document.getElementById('accountTitle').textContent = accountType.title;
+             document.getElementById('minimumNote').textContent =
+                 `Tối thiểu: $${accountType.minimum.toLocaleString()} cho ${accountType.title}`;
+
+             const featuresList = document.getElementById('accountFeatures');
+             featuresList.innerHTML = '';
+             accountType.features.forEach(feature => {
+                 const li = document.createElement('li');
+                 li.textContent = feature;
+                 featuresList.appendChild(li);
+             });
+
+             validateDeposit();
+         }
+
+         function validateDeposit() {
+             const depositAmount = parseFloat(document.getElementById('depositInput').value) || 0;
+             const remaining = totalBalance - depositAmount;
+
+             document.getElementById('depositSummary').textContent = '-$' + depositAmount.toFixed(2);
+             document.getElementById('remainingSummary').textContent = '$' + remaining.toFixed(2);
+
+             // Check if sufficient balance
+             const select = document.querySelector('select[name="AccountContext"]');
+             const accountType = accountTypes[select.value];
+             const depositInput = document.getElementById('depositInput');
+             if (depositAmount < accountType.minimum) {
+                 depositInput.style.borderColor = '#EF4444';
+             } else if (depositAmount > totalBalance) {
+                 depositInput.style.borderColor = '#EF4444';
+             } else {
+                 depositInput.style.borderColor = '#10B981';
+             }
+         }
+
+    </script>
 }
+<style>
+    .info-box {
+        background: linear-gradient(135deg, #D4AF37 0%, #F5E6C8 100%);
+        border: none;
+        border-radius: 12px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+
+    .account-details {
+        background: #F9FAFB;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        border: 2px solid #E5E7EB;
+    }
+
+
+        .account-details h4 {
+            margin-bottom: 1rem;
+            color: var(--banking-primary);
+        }
+
+
+        .account-details ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+
+        .account-details li {
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #E5E7EB;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+
+            .account-details li:last-child {
+                border-bottom: none;
+            }
+
+
+            .account-details li::before {
+                content: '✓';
+                color: var(--banking-success);
+                font-weight: 700;
+                font-size: 1.2rem;
+            }
+
+
+    .transaction-summary {
+        background: #F9FAFB;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-top: 2rem;
+    }
+
+
+    .summary-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 1rem 0;
+        border-bottom: 1px solid #E5E7EB;
+    }
+
+        .summary-row:last-child {
+            border-bottom: none;
+            padding-top: 1.5rem;
+            margin-top: 0.5rem;
+            border-top: 2px solid #E5E7EB;
+        }
+
+
+    .form-control:focus, .form-select:focus {
+        border-color: var(--banking-primary);
+        box-shadow: 0 0 0 3px rgba(10, 77, 60, 0.1);
+    }
+</style>

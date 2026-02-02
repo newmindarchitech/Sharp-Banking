@@ -46,8 +46,8 @@ namespace BankingVault.Controllers
                     var salt = CreateSalt();
                     var Bank_Rec = new BankRecord
                     {
-                        Id=Guid.NewGuid(),
-                        UserAccountID=Guid.NewGuid(),
+                        Id=Guid.CreateVersion7(),
+                        UserAccountID=Guid.CreateVersion7(),
                     };
                     db.BankRecords.Add(Bank_Rec);
                     var newAcc = new UserAccount

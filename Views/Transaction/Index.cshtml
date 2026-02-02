@@ -1,48 +1,202 @@
 ﻿@model IEnumerable<BankingVault.Models.Transaction>
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Transaction History";
 }
 
-<h1>Index</h1>
+<div class="container py-5">
+    <div class="page-header">
+        <h1 class="page-title">📊 Lịch sử giao dịch</h1>
+        <p class="page-subtitle">Xem chi tiết tất cả giao dịch của tài khoản</p>
 
-<p>
-    <a class="btn btn-primary btn-sm" asp-action="PrepareRecord">Record Transaction</a>
-</p>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.TransactionID)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.TransactionAmount)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.TransactionContext)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.CreatedDate)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.TransactionID)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.TransactionAmount)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.TransactionContext)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.CreatedDate)
-            </td>
-        </tr>
+    </div>
+
+    <div class="mb-4 d-flex gap-2">
+        <a asp-controller="Transaction" asp-action="PrepareRecord" class="btn btn-primary">
+            ➕ Giao dịch mới
+
+        </a>
+        <button class="btn btn-secondary" onclick="exportTransactions()">
+            📥 Xuất CSV
+
+        </button>
+        <a asp-controller="BankAccount" asp-action="Index" class="btn btn-outline-secondary">
+            ← Quay lại
+
+        </a>
+
+    </div>
+
+@if (Model != null && Model.Any())
+{
+        <!-- Transaction Summary Cards -->
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="stat-card">
+                    <div class="stat-label">Tổng giao dịch</div>
+                    <div class="stat-value">@Model.Count()</div>
+
+                </div>
+
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card success">
+                    <div class="stat-label">Tổng nạp/nhận</div>
+                    <div class="stat-value">
+                        @Model.Where(t => t.TransactionContext == BankingVault.Models.TransactionType.Deposit).Sum(t => t.TransactionAmount).ToString("C")
+
+                    </div>
+
+                </div>
+
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card warning">
+                    <div class="stat-label">Tổng rút/chuyển</div>
+                    <div class="stat-value">
+                        @{
+                            var totalWithdrawals = Model.Where(t => t.TransactionContext == BankingVault.Models.TransactionType.Withdrawal ||
+                            t.TransactionContext == BankingVault.Models.TransactionType.Transfer)
+                            .Sum(t => t.TransactionAmount);
+
+                        }
+                        @totalWithdrawals.ToString("C")
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="table-enhanced">
+            <table class="table mb-0" id="transactionsTable">
+
+                <thead>
+
+                    <tr>
+
+                        <th>Ngày giờ</th>
+
+                        <th>Loại giao dịch</th>
+
+                        <th>Số tiền</th>
+
+                        <th>Mã giao dịch</th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody>
+                    @foreach (var transaction in Model.OrderByDescending(t => t.CreatedDate))
+                    {
+
+                        <tr>
+
+                            <td>
+                                <div>
+                                    <strong>@transaction.CreatedDate.ToString("dd/MM/yyyy")</strong>
+
+                                </div>
+                                <small class="text-muted">@transaction.CreatedDate.ToString("HH:mm:ss")</small>
+
+                            </td>
+
+                            <td>
+                                @if (transaction.TransactionContext == BankingVault.Models.TransactionType.Deposit)
+                                {
+                                    <span class="badge-enhanced success">💰 Nạp tiền</span>
+                                }
+                                else if (transaction.TransactionContext == BankingVault.Models.TransactionType.Withdrawal)
+                                {
+                                    <span class="badge-enhanced warning">💸 Rút tiền</span>
+                                }
+                                else if (transaction.TransactionContext == BankingVault.Models.TransactionType.Transfer)
+                                {
+                                    <span class="badge-enhanced info">🔄 Chuyển khoản</span>
+                                }
+
+                            </td>
+
+                            <td>
+                                @if (transaction.TransactionContext == BankingVault.Models.TransactionType.Deposit)
+                                {
+                                    <strong style="color: var(--banking-success); font-size: 1.2rem; font-family: 'Playfair Display', serif;">
+                                        +@transaction.TransactionAmount.ToString("C")
+
+                                    </strong>
+                                }
+                                else
+                                {
+                                    <strong style="color: var(--banking-danger); font-size: 1.2rem; font-family: 'Playfair Display', serif;">
+                                        @transaction.TransactionAmount.ToString("C")
+
+                                    </strong>
+                                }
+
+                            </td>
+
+                            <td>
+                                <small class="text-muted" style="font-family: 'Courier New', monospace;">
+                                    #@transaction.TransactionID.ToString().Substring(0, 8)
+
+                                </small>
+
+                            </td>
+
+                        </tr>
+                    }
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+
+        <!-- Monthly Summary -->
+        <div class="card mt-4">
+            <div class="card-body">
+                <h3 style="font-family: 'Playfair Display', serif; margin-bottom: 1.5rem;">
+                    📅 Thống kê tháng này
+                </h3>
+                <div class="row">
+                    @{
+                        var thisMonth = Model.Where(t => t.CreatedDate.Month == DateTime.Now.Month &&
+                        t.CreatedDate.Year == DateTime.Now.Year);
+                        var deposits = thisMonth.Where(t => t.TransactionContext == BankingVault.Models.TransactionType.Deposit);
+                        var withdrawals = thisMonth.Where(t => t.TransactionContext == BankingVault.Models.TransactionType.Withdrawal ||
+                        t.TransactionContext == BankingVault.Models.TransactionType.Transfer);
+                    }
+                    <div class="col-md-4">
+                        <div style="padding: 1.5rem; background: #F9FAFB; border-radius: 8px; text-align: center;">
+                            <div style="color: #6B7280; font-size: 0.9rem; margin-bottom: 0.5rem;">Giao dịch tháng này</div>
+                            <div style="font-size: 2rem; font-weight: 700; font-family: 'Playfair Display', serif; color: var(--banking-primary);">
+                                @thisMonth.Count()
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div style="padding: 1.5rem; background: #D1FAE5; border-radius: 8px; text-align: center;">
+                            <div style="color: #065F46; font-size: 0.9rem; margin-bottom: 0.5rem;">Tổng nạp</div>
+                            <div style="font-size: 2rem; font-weight: 700; font-family: 'Playfair Display', serif; color: #065F46;">
+                                @deposits.Sum(t => t.TransactionAmount).ToString("C")
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div style="padding: 1.5rem; background: #FEE2E2; border-radius: 8px; text-align: center;">
+                            <div style="color: #991B1B; font-size: 0.9rem; margin-bottom: 0.5rem;">Tổng rút</div>
+                            <div style="font-size: 2rem; font-weight: 700; font-family: 'Playfair Display', serif; color: #991B1B;">
+                                @withdrawals.Sum(t => t.TransactionAmount).ToString("C")
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 }
-    </tbody>
-</table>
+

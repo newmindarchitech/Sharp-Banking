@@ -1,53 +1,291 @@
 ﻿@model IEnumerable<BankingVault.Models.AccountType>
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "My Accounts";
 }
 
-<h1>Index</h1>
+<div class="container py-5">
+    <div class="page-header">
+        <h1 class="page-title">💳 Tài khoản ngân hàng của tôi</h1>
+        <p class="page-subtitle">Quản lý tất cả tài khoản của bạn</p>
 
-<p>
-    <a class="btn btn-primary btn-sm" asp-action="CreateAccount" asp-route-id="@User.FindFirst("ID")?.Value">Create Bank Account</a>
-</p>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.AccountID)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Context)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Balance)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.CreatedDate)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.AccountID)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Context)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Balance)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.CreatedDate)
-            </td>
-                <td style=" white-space:nowrap">
-                    <a class="btn btn-primary btn-sm" asp-action="UpdateAccountBalance" asp-controller="BankAccount" asp-route-id="@item.AccountTransactionRecordID">Update Balance</a>
-                    <a class="btn btn-danger btn-sm" asp-action="Delete" asp-controller="BankAccount" asp-route-id="@item.AccountTransactionRecordID">Delete</a>
-                    <a class="btn btn-outline-primary btn-sm" asp-action="Index" asp-controller="Transaction" asp-route-id="@item.AccountTransactionRecordID">Make Transactions</a>
-                </td>
-        </tr>
-}
-    </tbody>
-</table>
+    </div>
+
+    <div class="mb-4">
+        <a asp-controller="BankAccount" asp-action="CreateAccount" asp-route-id="@User.FindFirst("ID")?.Value"
+           class="btn btn-primary" style="padding: 0.875rem 1.5rem;">
+            ➕ Tạo tài khoản mới
+
+        </a>
+
+    </div>
+
+
+    @if (Model != null && Model.Any())
+    {
+        <div class="table-enhanced">
+            <table class="table mb-0">
+
+                <thead>
+
+                    <tr>
+
+                        <th>Loại tài khoản</th>
+
+                        <th>Số dư</th>
+
+                        <th>Lãi suất</th>
+
+                        <th>Giới hạn rút</th>
+
+                        <th>Ngày tạo</th>
+
+                        <th>Thao tác</th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody>
+                    @foreach (var account in Model)
+                    {
+
+                        <tr>
+
+                            <td>
+                                <div>
+                                    <strong style="font-size: 1.1rem;">@account.Context.ToString()</strong>
+                                    @if (account.Context == BankingVault.Models.AccountContext.Checking)
+                                    {
+                                        <span class="badge-enhanced success ms-2">Active</span>
+                                    }
+                                    else if (account.Context == BankingVault.Models.AccountContext.Saving)
+                                    {
+                                        <span class="badge-enhanced info ms-2">Savings</span>
+                                    }
+                                    else if (account.Context == BankingVault.Models.AccountContext.MoneyMarket)
+                                    {
+                                        <span class="badge-enhanced warning ms-2">Investment</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge-enhanced warning ms-2">CD</span>
+                                    }
+
+                                </div>
+                                <small class="text-muted" style="font-family: 'Courier New', monospace;">
+                                    #@account.AccountID.ToString().Substring(0, 8)
+
+                                </small>
+
+                            </td>
+
+                            <td>
+                                <strong style="color: var(--banking-success); font-size: 1.2rem; font-family: 'Playfair Display', serif;">
+                                    @account.Balance.ToString("C")
+
+                                </strong>
+
+                            </td>
+
+                            <td>
+                                @if (account.InterestRate > 0)
+                                {
+                                    <span class="badge-enhanced success" style="font-size: 0.9rem;">
+                                        @account.InterestRate% APY
+
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">0%</span>
+                                }
+
+                            </td>
+
+                            <td>
+                                @if (account.WithDrawalLimits.HasValue && account.WithDrawalLimits > 0)
+                                {
+                                    <span>@account.WithDrawalLimits/tháng</span>
+                                }
+                                else
+                                {
+                                    <span class="badge-enhanced info">Không giới hạn</span>
+                                }
+
+                            </td>
+
+                            <td>
+                                <div>@account.CreatedDate.ToString("dd/MM/yyyy")</div>
+                                <small class="text-muted">@account.CreatedDate.ToString("HH:mm")</small>
+
+                            </td>
+
+                            <td>
+                                <div class="d-flex gap-2 flex-wrap">
+                                    <a asp-controller="Transaction" asp-action="Index" asp-route-id="@account.AccountTransactionRecordID"
+                                       class="btn btn-primary btn-sm">
+                                        📊 Chi tiết
+
+                                    </a>
+                                    <a asp-controller="BankAccount" asp-action="UpdateAccountBalance" asp-route-id="@account.AccountTransactionRecordID"
+                                       class="btn btn-primary btn-sm">
+                                        📊 Update Account Balance
+
+                                    </a>
+                                    <form method="post" asp-controller="BankAccount" asp-action="Delete" asp-route-id="@account.AccountTransactionRecordID"
+                                          onsubmit="return confirm('Bạn có chắc muốn xóa tài khoản này?');" style="display: inline;">
+                                        <button type="submit" class="btn btn-danger btn-sm">🗑 Xóa</button>
+
+                                    </form>
+
+                                </div>
+
+                            </td>
+
+                        </tr>
+                    }
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+        <div class="card mt-4">
+            <div class="card-body">
+                <h3 style="font-family: 'Playfair Display', serif; margin-bottom: 1.5rem;">📈 Tổng quan tài khoản</h3>
+                <div class="row">
+                    <div class="col-md-4">
+                        <div style="padding: 1.5rem; background: #F9FAFB; border-radius: 8px; text-align: center;">
+                            <div style="color: #6B7280; font-size: 0.9rem; margin-bottom: 0.5rem;">Tổng số tài khoản</div>
+                            <div style="font-size: 2.5rem; font-weight: 700; font-family: 'Playfair Display', serif; color: var(--banking-primary);">
+                                @Model.Count()
+
+                            </div>
+
+                        </div>
+
+                    </div>
+                    <div class="col-md-4">
+                        <div style="padding: 1.5rem; background: #F9FAFB; border-radius: 8px; text-align: center;">
+                            <div style="color: #6B7280; font-size: 0.9rem; margin-bottom: 0.5rem;">Tổng số dư</div>
+                            <div style="font-size: 2.5rem; font-weight: 700; font-family: 'Playfair Display', serif; color: var(--banking-success);">
+                                @Model.Sum(a => a.Balance).ToString("C")
+
+                            </div>
+
+                        </div>
+
+                    </div>
+                    <div class="col-md-4">
+                        <div style="padding: 1.5rem; background: #F9FAFB; border-radius: 8px; text-align: center;">
+                            <div style="color: #6B7280; font-size: 0.9rem; margin-bottom: 0.5rem;">Lãi suất trung bình</div>
+                            <div style="font-size: 2.5rem; font-weight: 700; font-family: 'Playfair Display', serif; color: #D97706;">
+                                @(Model.Any() ? Model.Average(a => a.InterestRate).ToString("0.00") : "0.00")%
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+    }
+    else
+
+    {
+        <div class="card">
+            <div class="card-body empty-state">
+                <div class="empty-state-icon">🏦</div>
+                <h3 class="empty-state-title">Chưa có tài khoản nào</h3>
+                <p class="empty-state-text">Bạn chưa tạo tài khoản ngân hàng nào. Hãy tạo tài khoản đầu tiên để bắt đầu!</p>
+                <a asp-controller="BankAccount" asp-action="CreateAccount" asp-route-id="@User.FindFirst("ID")?.Value"
+                   class="btn btn-primary btn-lg">
+                    Tạo tài khoản ngay
+
+                </a>
+
+            </div>
+
+        </div>
+    }
+
+</div>
+
+<style>
+    .badge-enhanced {
+        padding: 0.4rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+
+        .badge-enhanced.success {
+            background: #D1FAE5;
+            color: #065F46;
+        }
+
+
+        .badge-enhanced.info {
+            background: #DBEAFE;
+            color: #1E40AF;
+        }
+
+
+        .badge-enhanced.warning {
+            background: #FEF3C7;
+            color: #92400E;
+        }
+
+
+    .table-enhanced {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+
+        .table-enhanced thead {
+            background: #F9FAFB;
+        }
+
+
+            .table-enhanced thead th {
+                font-weight: 600;
+                color: #374151;
+                text-transform: uppercase;
+                font-size: 0.75rem;
+                letter-spacing: 0.5px;
+                padding: 1rem;
+                border-bottom: 2px solid #E5E7EB;
+            }
+
+
+        .table-enhanced tbody tr {
+            transition: background-color 0.2s ease;
+        }
+
+
+            .table-enhanced tbody tr:hover {
+                background: #F9FAFB;
+            }
+
+
+        .table-enhanced tbody td {
+            padding: 1rem;
+            border-bottom: 1px solid #E5E7EB;
+            vertical-align: middle;
+        }
+
+</style>
+
+

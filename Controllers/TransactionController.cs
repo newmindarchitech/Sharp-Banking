@@ -16,9 +16,9 @@ namespace BankingVault.Controllers
         }
         public IActionResult Index(Guid id)
         {
-            TempData["recordId"] = id; //UploadFile
-            TempData["Index"] = id; //Delete File
-            var transactionRecords=_db.Transactions.Where(trans=>trans.RecordID == id).ToList();
+            TempData["recordId"] = id; //FillForm
+            TempData["Index"] = id; //Index
+            var transactionRecords=_db.Transactions.AsNoTracking().Where(trans=>trans.RecordID == id).ToList();
             return View(transactionRecords);
         }
 
@@ -36,57 +36,85 @@ namespace BankingVault.Controllers
         public async Task<IActionResult> PrepareRecord(TransactionForm model)
         {
             var accountContextID = TempData["Index"];
-            var recordToWrite = _db.AccountTypes.FirstOrDefaultAsync(rec => rec.AccountTransactionRecordID == Guid.Parse(accountContextID.ToString()));
+            var recordToWrite =await _db.AccountTypes.FirstOrDefaultAsync(rec => rec.AccountTransactionRecordID == Guid.Parse(accountContextID.ToString()));
             if (recordToWrite != null) {
                 switch (model.TransactionContext)
                 {
                     case TransactionType.Transfer:
-                        if(recordToWrite.Result.Balance > model.TransactionAmount)
+                        if(recordToWrite.Balance > model.TransactionAmount)
                         {
                             try
                             {
                                 if (model.RecepientAccountID !=null)
                                 {
-                                    var transferTarget = _db.UserAccounts.FirstOrDefaultAsync(target => target.Id == model.RecepientAccountID);
-                                    if (transferTarget.Result==null)
+                                    var transferTarget = await _db.UserAccounts.FirstOrDefaultAsync(target => target.Id == model.RecepientAccountID);
+                                    if (transferTarget==null)
                                     {
                                         ModelState.Clear();
-                                        ModelState.AddModelError("", "This recepient doesn't exist");
-                                        TempData["Index"] = recordToWrite.Result.AccountTransactionRecordID;
+                                        ModelState.AddModelError("", "This receipient doesn't exist");
+                                        TempData["Index"] = recordToWrite.AccountTransactionRecordID;
                                         var refreshform = new TransactionForm
                                         {
-                                            RecordID = recordToWrite.Result.AccountTransactionRecordID,
+                                            RecordID = recordToWrite.AccountTransactionRecordID,
                                         };
                                         return View(refreshform);
                                     }
-                                    else if(recordToWrite.Result.Context==AccountContext.Saving || recordToWrite.Result.Context == AccountContext.MoneyMarket || recordToWrite.Result.Context==AccountContext.CertificateOfDeposit)
+                                    else if(recordToWrite.Context==AccountContext.Saving || recordToWrite.Context == AccountContext.MoneyMarket || recordToWrite.Context==AccountContext.CertificateOfDeposit)
                                     {
                                         
                                         var record = new Transaction
                                         {
-                                            TransactionID = Guid.NewGuid(),
+                                            TransactionID = Guid.CreateVersion7(),
                                             TransactionAmount = model.TransactionAmount,
-                                            RecordID = recordToWrite.Result.AccountTransactionRecordID,
+                                            RecordID = recordToWrite.AccountTransactionRecordID,
                                             TransactionContext = TransactionType.Transfer,
                                             CreatedDate = DateTime.Now
                                         };
-                                        recordToWrite.Result.Balance -= record.TransactionAmount;
-                                        recordToWrite.Result.WithDrawalLimits--;
-                                        transferTarget.Result.TotalBalance += model.TransactionAmount;
+                                        if (recordToWrite.PenaltyFees != null)
+                                        {
+                                            recordToWrite.Balance -= (record.TransactionAmount * ((decimal)recordToWrite.PenaltyFees)) / 100;
+                                            recordToWrite.WithDrawalLimits--;
+                                            _db.Transactions.Add(record);
+                                            await _db.SaveChangesAsync();
+                                            ModelState.Clear();
+                                            return RedirectToAction("Index", "Transaction", new { id = Guid.Parse(accountContextID.ToString()) });
+                                        }
+                                        else
+                                        {
+                                            recordToWrite.Balance -= record.TransactionAmount;
+                                            recordToWrite.WithDrawalLimits--;
+                                            _db.Transactions.Add(record);
+                                            await _db.SaveChangesAsync();
+                                            ModelState.Clear();
+                                            return RedirectToAction("Index", "Transaction", new { id = Guid.Parse(accountContextID.ToString()) });
+                                        }
+                                    }
+                                    else
+                                    {
+                                        var record = new Transaction
+                                        {
+                                            TransactionID = Guid.CreateVersion7(),
+                                            TransactionAmount = model.TransactionAmount,
+                                            RecordID = recordToWrite.AccountTransactionRecordID,
+                                            TransactionContext = TransactionType.Transfer,
+                                            CreatedDate = DateTime.Now
+                                        };
+                                        recordToWrite.Balance -= record.TransactionAmount;
+                                        transferTarget.TotalBalance += model.TransactionAmount;
                                         _db.Transactions.Add(record);
                                         await _db.SaveChangesAsync();
                                         ModelState.Clear();
-                                        return RedirectToAction("Index","Transaction", new { id = Guid.Parse(accountContextID.ToString()) });
+                                        return RedirectToAction("Index", "Transaction", new { id = Guid.Parse(accountContextID.ToString()) });
                                     }
                                 }
                                 else
                                 {
                                     ModelState.Clear();
                                     ModelState.AddModelError("", "An existing accountID is required to finish this type of transaction");
-                                    TempData["Index"] = recordToWrite.Result.AccountTransactionRecordID;
+                                    TempData["Index"] = recordToWrite.AccountTransactionRecordID;
                                     var refreshform = new TransactionForm
                                     {
-                                        RecordID = recordToWrite.Result.AccountTransactionRecordID,
+                                        RecordID = recordToWrite.AccountTransactionRecordID,
                                     };
                                     return View(refreshform);
                                 }
@@ -98,28 +126,24 @@ namespace BankingVault.Controllers
                         else
                         {
                             ModelState.Clear();
-                            ModelState.AddModelError("", "Current account Balance is not enough for this transaction");
-                            var fill_form = new TransactionForm
-                            {
-                                RecordID = recordToWrite.Result.AccountTransactionRecordID,
-                            };
+                            ModelState.AddModelError("", "Your account balance is below the transaction amount");
                             return RedirectToAction("UpdateAccountBalance", "BankAccount", new { id = Guid.Parse(accountContextID.ToString()) });
                         }
                         break;
                     case TransactionType.Deposit:
-                        if (recordToWrite.Result.Balance > model.TransactionAmount)
+                        if (recordToWrite.Balance > model.TransactionAmount)
                         {
                             try
                             {
                                 var record = new Transaction
                                 {
-                                    TransactionID = Guid.NewGuid(),
+                                    TransactionID = Guid.CreateVersion7(),
                                     TransactionAmount = model.TransactionAmount,
-                                    RecordID = recordToWrite.Result.AccountTransactionRecordID,
+                                    RecordID = recordToWrite.AccountTransactionRecordID,
                                     TransactionContext = TransactionType.Deposit,
                                     CreatedDate = DateTime.Now
                                 };
-                                recordToWrite.Result.Balance += record.TransactionAmount;
+                                recordToWrite.Balance += record.TransactionAmount;
                                 _db.Transactions.Add(record);
                                 await _db.SaveChangesAsync();
                                 ModelState.Clear();
@@ -132,26 +156,28 @@ namespace BankingVault.Controllers
                         }
                         else
                         {
+                            ModelState.Clear();
+                            ModelState.AddModelError("", "Your account balance is below the transaction amount");
                             return RedirectToAction("UpdateAccountBalance", "BankAccount", new { id = Guid.Parse(accountContextID.ToString()) });
                         }
                         break;
                     case TransactionType.Withdrawal:
-                        if (recordToWrite.Result.Balance > model.TransactionAmount && recordToWrite.Result.Context==AccountContext.Checking)
+                        if (recordToWrite.Balance > model.TransactionAmount && recordToWrite.Context==AccountContext.Checking)
                         {
                             try
                             {
                                 var record = new Transaction
                                 {
-                                    TransactionID = Guid.NewGuid(),
+                                    TransactionID = Guid.CreateVersion7(),
                                     TransactionAmount = model.TransactionAmount,
-                                    RecordID = recordToWrite.Result.AccountTransactionRecordID,
+                                    RecordID = recordToWrite.AccountTransactionRecordID,
                                     TransactionContext = TransactionType.Withdrawal,
                                     CreatedDate = DateTime.Now
                                 };
-                                recordToWrite.Result.Balance -= record.TransactionAmount;
-                                _db.Transactions.Add(record);
-                                await _db.SaveChangesAsync();
-                                ModelState.Clear();
+                                 recordToWrite.Balance -= record.TransactionAmount;
+                                 _db.Transactions.Add(record);
+                                 await _db.SaveChangesAsync();
+                                 ModelState.Clear();
                                 return RedirectToAction("Index", "Transaction", new { id = Guid.Parse(accountContextID.ToString()) });
                             }
                             catch (DbException e)
@@ -159,24 +185,37 @@ namespace BankingVault.Controllers
                                 e.ToString();
                             }
                         }
-                        else if (recordToWrite.Result.Balance > model.TransactionAmount && recordToWrite.Result.Context != AccountContext.Checking)
+                        else if (recordToWrite.Balance > model.TransactionAmount && recordToWrite.Context != AccountContext.Checking)
                         {
                             try
                             {
                                 var record = new Transaction
                                 {
-                                    TransactionID = Guid.NewGuid(),
+                                    TransactionID = Guid.CreateVersion7(),
                                     TransactionAmount = model.TransactionAmount,
-                                    RecordID = recordToWrite.Result.AccountTransactionRecordID,
+                                    RecordID = recordToWrite.AccountTransactionRecordID,
                                     TransactionContext = TransactionType.Withdrawal,
                                     CreatedDate = DateTime.Now
                                 };
-                                recordToWrite.Result.Balance -= record.TransactionAmount;
-                                recordToWrite.Result.WithDrawalLimits--;
-                                _db.Transactions.Add(record);
-                                await _db.SaveChangesAsync();
-                                ModelState.Clear();
-                                return RedirectToAction("Index", "Transaction", new { id = Guid.Parse(accountContextID.ToString()) });
+                                if (recordToWrite.PenaltyFees != null)
+                                {
+                                    recordToWrite.Balance -= (record.TransactionAmount * ((decimal)recordToWrite.PenaltyFees))/100;
+                                    recordToWrite.WithDrawalLimits--;
+                                    _db.Transactions.Add(record);
+                                    await _db.SaveChangesAsync();
+                                    ModelState.Clear();
+                                    return RedirectToAction("Index", "Transaction", new { id = Guid.Parse(accountContextID.ToString()) });
+                                }
+                                else
+                                {
+                                    recordToWrite.Balance -= record.TransactionAmount;
+                                    recordToWrite.WithDrawalLimits--;
+                                    _db.Transactions.Add(record);
+                                    await _db.SaveChangesAsync();
+                                    ModelState.Clear();
+                                    return RedirectToAction("Index", "Transaction", new { id = Guid.Parse(accountContextID.ToString()) });
+                                }
+                             
                             }
                             catch (DbException e)
                             {
@@ -185,6 +224,8 @@ namespace BankingVault.Controllers
                         }
                         else
                         {
+                            ModelState.Clear();
+                            ModelState.AddModelError("", "Your account balance is below the transaction amount");
                             return RedirectToAction("UpdateAccountBalance", "BankAccount", new { id = Guid.Parse(accountContextID.ToString()) });
                         }
                         break;
