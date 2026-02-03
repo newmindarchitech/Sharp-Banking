@@ -100,17 +100,6 @@ namespace BankingVault.Controllers
                     {
                         ModelState.AddModelError("", "Password was incorrect");
                     }
-                    else if (user.EmailAddress.Equals(PersonalInfo.AdminEmail))
-                    {
-                        var claims = new List<Claim> {
-                        new Claim(ClaimTypes.Name,user.EmailAddress),
-                        new Claim("UserName",user.UserName),
-                        new Claim(ClaimTypes.Role,"Admin")
-                        };
-                        var claimIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-                        await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimIdentity));
-                        return RedirectToAction("Index", "Home");
-                    }
                     else
                     {
 

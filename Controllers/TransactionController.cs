@@ -37,6 +37,7 @@ namespace BankingVault.Controllers
         {
             var accountContextID = TempData["Index"];
             var recordToWrite =await _db.AccountTypes.FirstOrDefaultAsync(rec => rec.AccountTransactionRecordID == Guid.Parse(accountContextID.ToString()));
+            var origin_account = await _db.UserAccounts.FirstOrDefaultAsync(acc => acc.EmailAddress == recordToWrite.OwnerEmail);
             if (recordToWrite != null) {
                 switch (model.TransactionContext)
                 {
@@ -131,7 +132,7 @@ namespace BankingVault.Controllers
                         }
                         break;
                     case TransactionType.Deposit:
-                        if (recordToWrite.Balance > model.TransactionAmount)
+                        if (origin_account.TotalBalance > model.TransactionAmount)
                         {
                             try
                             {
@@ -144,6 +145,7 @@ namespace BankingVault.Controllers
                                     CreatedDate = DateTime.Now
                                 };
                                 recordToWrite.Balance += record.TransactionAmount;
+                                origin_account.TotalBalance-=model.TransactionAmount;
                                 _db.Transactions.Add(record);
                                 await _db.SaveChangesAsync();
                                 ModelState.Clear();
