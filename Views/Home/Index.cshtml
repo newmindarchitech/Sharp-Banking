@@ -1,38 +1,40 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+﻿@model IEnumerable<BankingVault.Models.AccountType>
+
+@{
+    ViewData["Title"] = "Dashboard";
     var userBalance = ViewBag.TotalBalance ?? 0m;
-    var accountCount = Model?.Count() ?? 0;
+    var accountCount = 0;
     var thisMonthChange = ViewBag.MonthlyChange ?? 0m;
+    
+    if (Model != null && Model.Any())
+    {
+        accountCount = Model.Count();
+    }
 }
 
 <div class="page-header">
     <h1 class="page-title">Chào mừng, @User.FindFirst("UserName")?.Value</h1>
     <p class="page-subtitle">Tổng quan tài chính của bạn</p>
-
 </div>
+
 <div class="stats-grid">
     <div class="stat-card">
         <div class="stat-label">Total Balance</div>
         <div class="stat-value">@userBalance.ToString("C")</div>
-
     </div>
     <div class="stat-card success">
         <div class="stat-label">Active Accounts</div>
         <div class="stat-value">@accountCount</div>
-
     </div>
     <div class="stat-card warning">
         <div class="stat-label">This Month</div>
         <div class="stat-value">@thisMonthChange.ToString("C")</div>
-
     </div>
-
 </div>
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2>Tài khoản của bạn</h2>
     <a asp-controller="BankAccount" asp-action="Index" class="btn btn-primary">Xem tất cả tài khoản</a>
-
 </div>
 
 <div class="card-grid">
@@ -53,9 +55,13 @@
                     {
                         <span class="badge badge-info">Savings</span>
                     }
-                    else
+                    else if (account.Context == BankingVault.Models.AccountContext.MoneyMarket)
                     {
                         <span class="badge badge-warning">Investment</span>
+                    }
+                    else
+                    {
+                        <span class="badge badge-warning">CD</span>
                     }
 
                     <div class="account-balance">@account.Balance.ToString("C")</div>
@@ -71,18 +77,14 @@
                             {
                                 <span> | Withdrawal Limit: @account.WithDrawalLimits/month</span>
                             }
-
                         </div>
                     }
 
                     <div class="btn-group mt-3">
                         <a asp-controller="Transaction" asp-action="Index" asp-route-id="@account.AccountTransactionRecordID" class="btn btn-primary btn-sm">View Details</a>
                         <a asp-controller="BankAccount" asp-action="UserAccountBalance" asp-route-id="@User.FindFirst("ID")?.Value" class="btn btn-success btn-sm">Deposit</a>
-
                     </div>
-
                 </div>
-
             </div>
         }
     }
@@ -93,11 +95,8 @@
             <h3 class="empty-state-title">Create New Account</h3>
             <p class="empty-state-text">Mở thêm tài khoản để quản lý tài chính tốt hơn</p>
             <a asp-controller="BankAccount" asp-action="CreateAccount" asp-route-id="@User.FindFirst("ID")?.Value" class="btn btn-primary">Get Started</a>
-
         </div>
-
     </div>
-
 </div>
 
 @if (Model == null || !Model.Any())
@@ -108,8 +107,17 @@
             <h3 class="empty-state-title">Welcome to Banking Vault!</h3>
             <p class="empty-state-text">Bạn chưa có tài khoản ngân hàng nào. Hãy tạo tài khoản đầu tiên để bắt đầu!</p>
             <a asp-controller="BankAccount" asp-action="UserAccountBalance" asp-route-id="@User.FindFirst("ID")?.Value" class="btn btn-accent btn-lg">Nạp tiền vào tài khoản</a>
-
         </div>
-
     </div>
+}
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const statCards = document.querySelectorAll('.stat-card');
+            statCards.forEach((card, index) => {
+                card.style.animationDelay = `${index * 0.1}s`;
+            });
+        });
+    </script>
 }

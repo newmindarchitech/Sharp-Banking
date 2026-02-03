@@ -18,5 +18,7 @@ namespace BankingVault.Models
 
         public AccountContext AccountContext { get; set; }
 
+        // Add this property to fix CS1061
+        public int? RecipientAccountID { get; set; }
     }
 }
