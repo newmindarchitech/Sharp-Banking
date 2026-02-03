@@ -18,7 +18,7 @@
             </div>
             <div class="form-group">
                 <label asp-for="TotalBalance" class="control-label"></label>
-                <input asp-for="TotalBalance" class="form-control" disabled/>
+                <input asp-for="TotalBalance" class="form-control" disabled />
                 <span asp-validation-for="TotalBalance" class="text-danger"></span>
             </div>
             <div class="form-group">
@@ -26,6 +26,14 @@
                 <input asp-for="DepositAmount" class="form-control" />
                 <span asp-validation-for="DepositAmount" class="text-danger"></span>
             </div>
+
+            <!-- Thêm ô RecipientAccountID vào đây -->
+            <div class="form-group">
+                <label asp-for="RecipientAccountID" class="control-label">Recipient Account ID</label>
+                <input asp-for="RecipientAccountID" class="form-control" />
+                <span asp-validation-for="RecipientAccountID" class="text-danger"></span>
+            </div>
+
             <div class="mx-auto mt-3">
                 <div class="form-group">
                     <input type="submit" value="UpdateBalance" class="btn btn-primary" />
@@ -40,5 +48,7 @@
 </div>
 
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
 }

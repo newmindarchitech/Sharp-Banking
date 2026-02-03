@@ -1,50 +1,208 @@
 ﻿@model BankingVault.Models.TransactionForm
 
 @{
-    ViewData["Title"] = "PrepareRecord";
+    ViewData["Title"] = "Giao dịch mới";
 }
 
-<h1>PrepareRecord</h1>
+<div class="container py-5">
+    <div class="page-header">
+        <h1 class="page-title">💸 Tạo giao dịch mới</h1>
+        <p class="page-subtitle">Thực hiện nạp tiền, rút tiền hoặc chuyển khoản</p>
+    </div>
 
-<h4>TransactionForm</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="PrepareRecord">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-group">
-                <label asp-for="RecordID" class="control-label"></label>
-                <input asp-for="RecordID" class="form-control" disabled/>
-                <span asp-validation-for="RecordID" class="text-danger"></span>
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            @if (!ViewData.ModelState.IsValid)
+            {
+                <div class="alert alert-danger">
+                    @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                    {
+                        <div>⚠️ @error.ErrorMessage</div>
+                    }
+                </div>
+            }
+
+            <div class="card">
+                <div class="card-body" style="padding: 2rem;">
+                    <form method="post" asp-controller="Transaction" asp-action="PrepareRecord">
+                        <input type="hidden" asp-for="RecordID" />
+
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold" style="font-size: 1.1rem;">Loại giao dịch</label>
+                            <select class="form-select form-select-lg" asp-for="TransactionContext" 
+                                    style="border: 2px solid #E5E7EB; padding: 1rem; font-size: 1.1rem;"
+                                    onchange="updateTransactionType()">
+                                <option value="0">💰 Nạp tiền (Deposit)</option>
+                                <option value="1">💸 Rút tiền (Withdrawal)</option>
+                                <option value="2">🔄 Chuyển khoản (Transfer)</option>
+                            </select>
+                            <span class="text-danger" asp-validation-for="TransactionContext"></span>
+                        </div>
+
+                        <div class="transaction-info" id="transactionInfo">
+                            <div class="alert" style="background: #D1FAE5; border-left: 4px solid #10B981; color: #065F46;">
+                                <strong>💰 Nạp tiền</strong>
+                                <p class="mb-0 mt-2">Thêm tiền vào tài khoản của bạn. Số dư sẽ được cộng ngay lập tức.</p>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="RecipientAccountID">Recipient Account ID</label>
+                            <input type="text" id="RecipientAccountID" name="RecipientAccountID" class="form-control" placeholder="Enter Recipient Account ID" required>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold" style="font-size: 1.1rem;">Số tiền giao dịch</label>
+                            <div class="input-group input-group-lg">
+                                <span class="input-group-text" style="background: #F9FAFB; border: 2px solid #E5E7EB; font-size: 1.5rem;">$</span>
+                                <input type="number" class="form-control" asp-for="TransactionAmount" 
+                                       placeholder="0.00" step="0.01" min="0" 
+                                       style="border: 2px solid #E5E7EB; font-size: 1.5rem; padding: 1rem;"
+                                       id="amountInput" />
+                            </div>
+                            <span class="text-danger" asp-validation-for="TransactionAmount"></span>
+                        </div>
+
+                        <div class="alert alert-warning" style="border-left: 4px solid #F59E0B;">
+                            <strong>⚠️ Lưu ý quan trọng:</strong>
+                            <ul class="mb-0 mt-2">
+                                <li>Kiểm tra kỹ số tiền trước khi xác nhận</li>
+                                <li>Giao dịch không thể hoàn tác sau khi thực hiện</li>
+                                <li>Đảm bảo số dư đủ cho giao dịch rút tiền/chuyển khoản</li>
+                            </ul>
+                        </div>
+
+                        <div class="d-flex gap-2 mt-4">
+                            <button type="submit" class="btn btn-success flex-fill" style="padding: 1rem; font-size: 1.1rem; font-weight: 600;">
+                                ✓ Xác nhận giao dịch
+                            </button>
+                            <a asp-controller="Transaction" asp-action="Index" asp-route-id="@Model.RecordID" class="btn btn-secondary" style="padding: 1rem;">
+                                Hủy
+                            </a>
+                        </div>
+                    </form>
+                </div>
             </div>
-            <div class="form-group">
-                <label asp-for="TransactionAmount" class="control-label"></label>
-                <input asp-for="TransactionAmount" class="form-control" />
-                <span asp-validation-for="TransactionAmount" class="text-danger"></span>
+
+            <!-- Transaction Guide -->
+            <div class="card mt-4">
+                <div class="card-body">
+                    <h4 style="font-family: 'Playfair Display', serif; margin-bottom: 1rem;">
+                        📖 Hướng dẫn giao dịch
+                    </h4>
+                    <div class="transaction-guide">
+                        <div class="guide-item">
+                            <div class="guide-icon" style="background: #D1FAE5; color: #065F46;">💰</div>
+                            <div>
+                                <strong>Nạp tiền (Deposit)</strong>
+                                <p class="text-muted mb-0">Thêm tiền vào tài khoản. Số dư sẽ tăng.</p>
+                            </div>
+                        </div>
+                        <div class="guide-item">
+                            <div class="guide-icon" style="background: #FEF3C7; color: #92400E;">💸</div>
+                            <div>
+                                <strong>Rút tiền (Withdrawal)</strong>
+                                <p class="text-muted mb-0">Rút tiền từ tài khoản. Số dư sẽ giảm.</p>
+                            </div>
+                        </div>
+                        <div class="guide-item">
+                            <div class="guide-icon" style="background: #DBEAFE; color: #1E40AF;">🔄</div>
+                            <div>
+                                <strong>Chuyển khoản (Transfer)</strong>
+                                <p class="text-muted mb-0">Chuyển tiền sang tài khoản khác. Số dư sẽ giảm.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="form-group">
-                <label asp-for="RecepientAccountID" class="control-label"></label>
-                <input asp-for="RecepientAccountID" class="form-control" />
-                <span asp-validation-for="RecepientAccountID" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="TransactionContext" class="control-label"></label>
-                <select asp-for="TransactionContext" class="form-control" asp-items="Html.GetEnumSelectList<TransactionType>()">
-                    <option selected="selected" value="">Please select this transaction context</option>
-                </select>
-                <span asp-validation-for="TransactionContext" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Record Transaction" class="btn btn-primary" />
-            </div>
-        </form>
+        </div>
     </div>
 </div>
 
-<div>
-    <a asp-action="Redirect">Back to List</a>
-</div>
-
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        function updateTransactionType() {
+            const select = document.querySelector('select[name="TransactionContext"]');
+            const infoDiv = document.getElementById('transactionInfo');
+            
+            const types = {
+                0: {
+                    color: '#D1FAE5',
+                    borderColor: '#10B981',
+                    textColor: '#065F46',
+                    icon: '💰',
+                    title: 'Nạp tiền',
+                    description: 'Thêm tiền vào tài khoản của bạn. Số dư sẽ được cộng ngay lập tức.'
+                },
+                1: {
+                    color: '#FEF3C7',
+                    borderColor: '#F59E0B',
+                    textColor: '#92400E',
+                    icon: '💸',
+                    title: 'Rút tiền',
+                    description: 'Rút tiền từ tài khoản. Đảm bảo số dư đủ để thực hiện giao dịch.'
+                },
+                2: {
+                    color: '#DBEAFE',
+                    borderColor: '#3B82F6',
+                    textColor: '#1E40AF',
+                    icon: '🔄',
+                    title: 'Chuyển khoản',
+                    description: 'Chuyển tiền sang tài khoản khác. Số tiền sẽ bị trừ từ tài khoản này.'
+                }
+            };
+            
+            const type = types[select.value];
+            infoDiv.innerHTML = `
+                <div class="alert" style="background: ${type.color}; border-left: 4px solid ${type.borderColor}; color: ${type.textColor};">
+                    <strong>${type.icon} ${type.title}</strong>
+                    <p class="mb-0 mt-2">${type.description}</p>
+                </div>
+            `;
+        }
+        
+        // Format currency input
+        document.getElementById('amountInput').addEventListener('blur', function() {
+            if (this.value) {
+                this.value = parseFloat(this.value).toFixed(2);
+            }
+        });
+    </script>
 }
+
+<style>
+    .transaction-info {
+        margin-bottom: 1.5rem;
+    }
+
+    .transaction-guide {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .guide-item {
+        display: flex;
+        gap: 1rem;
+        align-items: start;
+        padding: 1rem;
+        background: #F9FAFB;
+        border-radius: 8px;
+    }
+
+    .guide-icon {
+        width: 48px;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        font-size: 1.5rem;
+        flex-shrink: 0;
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: var(--banking-primary);
+        box-shadow: 0 0 0 3px rgba(10, 77, 60, 0.1);
+    }
+</style>

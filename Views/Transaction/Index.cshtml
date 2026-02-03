@@ -8,103 +8,74 @@
     <div class="page-header">
         <h1 class="page-title">📊 Lịch sử giao dịch</h1>
         <p class="page-subtitle">Xem chi tiết tất cả giao dịch của tài khoản</p>
-
     </div>
 
     <div class="mb-4 d-flex gap-2">
         <a asp-controller="Transaction" asp-action="PrepareRecord" class="btn btn-primary">
             ➕ Giao dịch mới
-
         </a>
         <button class="btn btn-secondary" onclick="exportTransactions()">
             📥 Xuất CSV
-
         </button>
         <a asp-controller="BankAccount" asp-action="Index" class="btn btn-outline-secondary">
             ← Quay lại
-
         </a>
-
     </div>
 
-@if (Model != null && Model.Any())
-{
+    @if (Model != null && Model.Any())
+    {
         <!-- Transaction Summary Cards -->
         <div class="row mb-4">
             <div class="col-md-4">
                 <div class="stat-card">
                     <div class="stat-label">Tổng giao dịch</div>
                     <div class="stat-value">@Model.Count()</div>
-
                 </div>
-
             </div>
             <div class="col-md-4">
                 <div class="stat-card success">
                     <div class="stat-label">Tổng nạp/nhận</div>
-                    <div class="stat-value">
-                        @Model.Where(t => t.TransactionContext == BankingVault.Models.TransactionType.Deposit).Sum(t => t.TransactionAmount).ToString("C")
-
-                    </div>
-
+                    @{
+                        var totalDeposits = Model.Where(t => t.TransactionContext == BankingVault.Models.TransactionType.Deposit)
+                        .Sum(t => t.TransactionAmount);
+                    }
+                    <div class="stat-value">@totalDeposits.ToString("C")</div>
                 </div>
-
             </div>
             <div class="col-md-4">
                 <div class="stat-card warning">
                     <div class="stat-label">Tổng rút/chuyển</div>
-                    <div class="stat-value">
-                        @{
-                            var totalWithdrawals = Model.Where(t => t.TransactionContext == BankingVault.Models.TransactionType.Withdrawal ||
-                            t.TransactionContext == BankingVault.Models.TransactionType.Transfer)
-                            .Sum(t => t.TransactionAmount);
-
-                        }
-                        @totalWithdrawals.ToString("C")
-
-                    </div>
-
+                    @{
+                        var totalWithdrawals = Model.Where(t => t.TransactionContext == BankingVault.Models.TransactionType.Withdrawal ||
+                        t.TransactionContext == BankingVault.Models.TransactionType.Transfer)
+                        .Sum(t => t.TransactionAmount);
+                    }
+                    <div class="stat-value">@totalWithdrawals.ToString("C")</div>
                 </div>
-
             </div>
-
         </div>
 
-
+        <!-- Transactions Table -->
         <div class="table-enhanced">
             <table class="table mb-0" id="transactionsTable">
-
                 <thead>
-
                     <tr>
-
                         <th>Ngày giờ</th>
-
                         <th>Loại giao dịch</th>
-
                         <th>Số tiền</th>
-
                         <th>Mã giao dịch</th>
-
                     </tr>
-
                 </thead>
-
                 <tbody>
                     @foreach (var transaction in Model.OrderByDescending(t => t.CreatedDate))
                     {
-
                         <tr>
-
                             <td>
                                 <div>
                                     <strong>@transaction.CreatedDate.ToString("dd/MM/yyyy")</strong>
-
                                 </div>
                                 <small class="text-muted">@transaction.CreatedDate.ToString("HH:mm:ss")</small>
-
                             </td>
-
                             <td>
                                 @if (transaction.TransactionContext == BankingVault.Models.TransactionType.Deposit)
                                 {
@@ -118,44 +89,31 @@
                                 {
                                     <span class="badge-enhanced info">🔄 Chuyển khoản</span>
                                 }
-
                             </td>
-
                             <td>
                                 @if (transaction.TransactionContext == BankingVault.Models.TransactionType.Deposit)
                                 {
                                     <strong style="color: var(--banking-success); font-size: 1.2rem; font-family: 'Playfair Display', serif;">
                                         +@transaction.TransactionAmount.ToString("C")
-
                                     </strong>
                                 }
                                 else
                                 {
                                     <strong style="color: var(--banking-danger); font-size: 1.2rem; font-family: 'Playfair Display', serif;">
-                                        @transaction.TransactionAmount.ToString("C")
-
+                                        -@transaction.TransactionAmount.ToString("C")
                                     </strong>
                                 }
-
                             </td>
-
                             <td>
                                 <small class="text-muted" style="font-family: 'Courier New', monospace;">
                                     #@transaction.TransactionID.ToString().Substring(0, 8)
-
                                 </small>
-
                             </td>
-
                         </tr>
                     }
-
                 </tbody>
-
             </table>
-
         </div>
-
 
         <!-- Monthly Summary -->
         <div class="card mt-4">
@@ -198,5 +156,163 @@
                 </div>
             </div>
         </div>
+    }
+    else
+    {
+        <div class="card">
+            <div class="card-body empty-state">
+                <div class="empty-state-icon">📊</div>
+                <h3 class="empty-state-title">Chưa có giao dịch nào</h3>
+                <p class="empty-state-text">Tài khoản này chưa có giao dịch. Hãy thực hiện giao dịch đầu tiên!</p>
+                <a asp-controller="Transaction" asp-action="PrepareRecord" class="btn btn-primary btn-lg">
+                    Tạo giao dịch mới
+                </a>
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        function exportTransactions() {
+            const table = document.getElementById('transactionsTable');
+            let csv = [];
+
+            // Headers
+            const headers = Array.from(table.querySelectorAll('thead th'))
+                .map(th => th.textContent.trim());
+            csv.push(headers.join(','));
+
+            // Rows
+            const rows = table.querySelectorAll('tbody tr');
+            rows.forEach(row => {
+                const cells = Array.from(row.querySelectorAll('td'))
+                    .map(td => {
+                        // Clean up the text content
+                        let text = td.textContent.trim().replace(/\s+/g, ' ');
+                        // Wrap in quotes if contains comma
+                        if (text.includes(',')) {
+                            text = `"${text}"`;
+                        }
+                        return text;
+                    });
+                csv.push(cells.join(','));
+            });
+
+            // Download
+            const csvContent = csv.join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', `transactions_${new Date().toISOString().split('T')[0]}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    </script>
 }
 
+<style>
+    .stat-card {
+        background: linear-gradient(135deg, var(--banking-primary) 0%, var(--banking-primary-light) 100%);
+        color: white;
+        padding: 1.5rem;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        position: relative;
+        overflow: hidden;
+    }
+
+        .stat-card::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+        }
+
+        .stat-card.success {
+            background: linear-gradient(135deg, #059669 0%, #10B981 100%);
+        }
+
+        .stat-card.warning {
+            background: linear-gradient(135deg, #D97706 0%, #F59E0B 100%);
+        }
+
+    .stat-label {
+        font-size: 0.9rem;
+        opacity: 0.9;
+        margin-bottom: 0.5rem;
+        position: relative;
+        z-index: 1;
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        font-family: 'Playfair Display', serif;
+        position: relative;
+        z-index: 1;
+    }
+
+    .badge-enhanced {
+        padding: 0.4rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+
+        .badge-enhanced.success {
+            background: #D1FAE5;
+            color: #065F46;
+        }
+
+        .badge-enhanced.info {
+            background: #DBEAFE;
+            color: #1E40AF;
+        }
+
+        .badge-enhanced.warning {
+            background: #FEF3C7;
+            color: #92400E;
+        }
+
+    .table-enhanced {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+        .table-enhanced thead {
+            background: #F9FAFB;
+        }
+
+            .table-enhanced thead th {
+                font-weight: 600;
+                color: #374151;
+                text-transform: uppercase;
+                font-size: 0.75rem;
+                letter-spacing: 0.5px;
+                padding: 1rem;
+                border-bottom: 2px solid #E5E7EB;
+            }
+
+        .table-enhanced tbody tr {
+            transition: background-color 0.2s ease;
+        }
+
+            .table-enhanced tbody tr:hover {
+                background: #F9FAFB;
+            }
+
+        .table-enhanced tbody td {
+            padding: 1rem;
+            border-bottom: 1px solid #E5E7EB;
+            vertical-align: middle;
+        }
+</style>
