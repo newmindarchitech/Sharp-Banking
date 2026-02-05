@@ -127,7 +127,7 @@ namespace BankingVault.Controllers
                         insertWithDrawalLimits = 6;
                         insertInterestRate = 2.0m;
                         DepositeFee = 250000;
-                        if (model.DepositAmount > DepositeFee)
+                        if (model.DepositAmount >= DepositeFee)
                         {
                             var new_account_type_2 = new AccountType
                             {
@@ -168,9 +168,9 @@ namespace BankingVault.Controllers
                     if (user_Balance.TotalBalance > model.DepositAmount)
                     {
                         insertWithDrawalLimits = 6;
-                        insertInterestRate = 5.4m;
-                        DepositeFee = 25000000;
-                        if (model.DepositAmount > DepositeFee)
+                        insertInterestRate = 3.0m;
+                        DepositeFee = 2500000;
+                        if (model.DepositAmount >= DepositeFee)
                         {
                             var new_account_type_3 = new AccountType
                             {
@@ -194,7 +194,7 @@ namespace BankingVault.Controllers
                         else
                         {
                             ModelState.Clear();
-                            ModelState.AddModelError("", "Desposit Amount Below Requirement:25000000");
+                            ModelState.AddModelError("", "Desposit Amount Below Requirement:2500000");
                             var fill_Form_OwnerID = new BankAccountCreationForm
                             {
                                 TotalBalance = user_Balance.TotalBalance,
@@ -210,8 +210,53 @@ namespace BankingVault.Controllers
                         return RedirectToAction("UserAccountBalance", "BankAccount", new { id = id });
                     }
                 case AccountContext.CertificateOfDeposit:
-
-                    break;
+                    if (user_Balance.TotalBalance > model.DepositAmount)
+                    {
+                        insertWithDrawalLimits = 0;
+                        insertInterestRate = 5.4m;
+                        DepositeFee = 10000000;
+                        PenaltyFees = 0;
+                        var rand = new Random();
+                        int random_month_int = rand.Next(3, 37);
+                        if (model.DepositAmount >= DepositeFee)
+                        {
+                            var new_account_type_3 = new AccountType
+                            {
+                                AccountID = new_Account_Record.AccountContextID,
+                                OwnerEmail = user_Balance.EmailAddress,
+                                Balance = model.DepositAmount,
+                                CreatedDate = DateTime.Now,
+                                DeductionDate = DateTime.Today.AddMonths(random_month_int),
+                                Context = AccountContext.CertificateOfDeposit,
+                                WithDrawalLimits = insertWithDrawalLimits,
+                                InterestRate = insertInterestRate,
+                                DepositFee = DepositeFee,
+                                AccountTransactionRecordID = new_Account_Record.AccountRecordID,
+                            };
+                            user_Balance.TotalBalance -= model.DepositAmount;
+                            _db.AccountTypes.Add(new_account_type_3);
+                            await _db.SaveChangesAsync();
+                            ModelState.Clear();
+                            return RedirectToAction("Index", "BankAccount", new { id = id });
+                        }
+                        else
+                        {
+                            ModelState.Clear();
+                            ModelState.AddModelError("", "Desposit Amount Below Requirement:1000000");
+                            var fill_Form_OwnerID = new BankAccountCreationForm
+                            {
+                                TotalBalance = user_Balance.TotalBalance,
+                                OwnerID = user_Balance.Id,
+                                DepositAmount = 0,
+                                AccountContext = AccountContext.Checking,
+                            };
+                            return View(fill_Form_OwnerID);
+                        }
+                    }
+                    else
+                    {
+                        return RedirectToAction("UserAccountBalance", "BankAccount", new { id = id });
+                    }
             }
             return View();
         }

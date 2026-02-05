@@ -40,7 +40,7 @@
 <div class="card-grid">
     @if (Model != null && Model.Any())
     {
-        foreach (var account in Model.Take(3))
+        foreach (var account in Model)
         {
             <div class="card account-card">
                 <div class="card-body">
@@ -59,7 +59,7 @@
                     {
                         <span class="badge badge-warning">Investment</span>
                     }
-                    else
+                    else if (account.Context == BankingVault.Models.AccountContext.CertificateOfDeposit)
                     {
                         <span class="badge badge-warning">CD</span>
                     }

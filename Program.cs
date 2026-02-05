@@ -1,3 +1,4 @@
+using BankingVault.BackgroundServices;
 using BankingVault.Models;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
@@ -13,6 +14,15 @@ builder.Services.AddDbContext<DatabaseContext>(options =>
     options.UseSqlServer(DatabaseCon);
 });
 
+builder.Services.AddHostedService<PenaltyCheckService>();
+builder.Services.AddHostedService<InterestRateService>();
+builder.Services.AddHostedService<MaintenanceFeeService>();
+
+builder.Services.Configure<HostOptions>(options =>
+{
+    options.ServicesStartConcurrently=true;
+    options.ServicesStopConcurrently=true;
+});
 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie(options =>
 {

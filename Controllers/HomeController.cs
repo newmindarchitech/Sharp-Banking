@@ -29,7 +29,7 @@ namespace BankingVault.Controllers
                 // Get user's accounts
                 var accounts = await _db.AccountTypes
                     .AsNoTracking()
-                    .Where(a => a.OwnerEmail == userEmail)
+                    .Where(a => a.OwnerEmail == user.EmailAddress)
                     .ToListAsync();
 
                 // Pass data to view

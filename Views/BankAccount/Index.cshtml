@@ -67,7 +67,7 @@
                                     {
                                         <span class="badge-enhanced warning ms-2">Investment</span>
                                     }
-                                    else
+                                    else 
                                     {
                                         <span class="badge-enhanced warning ms-2">CD</span>
                                     }
@@ -108,10 +108,15 @@
                                 {
                                     <span>@account.WithDrawalLimits/tháng</span>
                                 }
-                                else
+                                @if (account.Context != AccountContext.Checking && account.WithDrawalLimits == 0)
+                                {
+                                    <span class="badge-enhanced info">Tính phí</span>
+                                }
+                                @if (account.WithDrawalLimits == 0 && account.Context == AccountContext.Checking)
                                 {
                                     <span class="badge-enhanced info">Không giới hạn</span>
                                 }
+                                
 
                             </td>
 
@@ -126,11 +131,6 @@
                                     <a asp-controller="Transaction" asp-action="Index" asp-route-id="@account.AccountTransactionRecordID"
                                        class="btn btn-primary btn-sm">
                                         📊 Chi tiết
-
-                                    </a>
-                                    <a asp-controller="BankAccount" asp-action="UpdateAccountBalance" asp-route-id="@account.AccountTransactionRecordID"
-                                       class="btn btn-primary btn-sm">
-                                        📊 Update Account Balance
 
                                     </a>
                                     <form method="post" asp-controller="BankAccount" asp-action="Delete" asp-route-id="@account.AccountTransactionRecordID"
